@@ -14,5 +14,6 @@ cd ..
 curl -L -o app.zip https://github.com/DylBP/SBOM-FYP/archive/refs/heads/main.zip
 unzip app.zip
 cd SBOM-FYP-main
+sudo yum install -y pip
 pip install -r requirements.txt
 python3 flask-api.py
