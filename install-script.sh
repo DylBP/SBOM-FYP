@@ -13,6 +13,6 @@ cd ..
 # Download and run SBOM-FYP Flask API
 curl -L -o app.zip https://github.com/DylBP/SBOM-FYP/archive/refs/heads/main.zip
 unzip app.zip
-cd SBOM-FYP
+cd SBOM-FYP-main
 pip install -r requirements.txt
 python3 flask-api.py
