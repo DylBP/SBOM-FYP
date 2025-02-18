@@ -8,15 +8,16 @@ curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh 
 echo 'export PATH=$HOME/.local/bin:$PATH' >> /home/ec2-user/.bashrc
 source /home/ec2-user/.bashrc
 
+# ----- LEFT COMMENTED TO REMEMBER PROCESS ----- #
 # Download and process wad2-assign2 repo
-curl -L -o main.zip https://github.com/DylBP/wad2-assign2/archive/refs/heads/main.zip
-unzip main.zip
-cd wad2-assign2-main
-syft . -o cyclonedx-json > sbom.json
-grype sbom.json -o table > output.grype
-cd ..
+# curl -L -o main.zip https://github.com/DylBP/wad2-assign2/archive/refs/heads/main.zip
+# unzip main.zip
+# cd wad2-assign2-main
+# syft . -o cyclonedx-json > sbom.json
+# grype sbom.json -o table > output.grype
+# cd ..
 
-# Download and run SBOM-FYP Flask API
+# Download and run sbom-fyp API
 curl -L -o app.zip https://github.com/DylBP/SBOM-FYP/archive/refs/heads/main.zip
 unzip app.zip
 cd SBOM-FYP-main/api
