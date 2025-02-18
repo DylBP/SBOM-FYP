@@ -1,3 +1,5 @@
+su - ec2-user
+
 # Install Syft and Grype
 mkdir -p /home/ec2-user/.local/bin
 
@@ -24,7 +26,7 @@ cd SBOM-FYP-main/api
 
 # Install API dependencies
 npm install
-npm install pm2
+npm install -g pm2
 
 # Start API using pm2
 pm2 start ExpressAPI.js --name sbom-api
