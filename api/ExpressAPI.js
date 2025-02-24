@@ -35,6 +35,40 @@ const s3 = new S3Client({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(dbClient);
 
 // ================================
+// Infrastructure: S3 Bucket Setup
+// ================================
+async function createSBOMBucket() {
+  const bucketName = 'sbom-files';
+
+  try {
+    // Check if bucket exists
+    await s3.send(new HeadBucketCommand({ Bucket: bucketName }));
+    console.log(`⚠️ Bucket "${bucketName}" already exists.`);
+  } catch (err) {
+    if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
+      // Bucket does not exist, create it
+      const bucketParams = {
+        Bucket: bucketName,
+        CreateBucketConfiguration: {
+          LocationConstraint: process.env.AWS_REGION,
+        },
+      };
+
+      try {
+        await s3.send(new CreateBucketCommand(bucketParams));
+        console.log(`✔️ Bucket "${bucketName}" created successfully.`);
+      } catch (createErr) {
+        console.error(`❌ Error creating bucket:`, createErr);
+      }
+    } else {
+      console.error(`❌ Error checking bucket existence:`, err);
+    }
+  }
+}
+
+createSBOMBucket();
+
+// ================================
 // Infrastructure: DynamoDB Setup
 // ================================
 async function createSBOMTable() {
@@ -159,7 +193,7 @@ app.post('/uploadSBOM', upload.single('file'), async (req, res) => {
       const vulnReportKey = `vuln-reports/${req.file.filename.replace('.json', '_vuln_report.json')}`;
 
       // Upload the vulnerability report to S3
-      await uploadToS3(JSON.stringify(vulnReport), process.env.S3_VULN_REPORT_NAME, vulnReportKey);
+      await uploadToS3(JSON.stringify(vulnReport), process.env.S3_SBOM_BUCKET_NAME, vulnReportKey);
 
       // Clean up local temp file
       fs.unlinkSync(filePath);
