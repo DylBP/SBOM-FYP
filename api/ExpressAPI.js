@@ -133,7 +133,7 @@ app.post('/uploadSBOM', upload.single('file'), async (req, res) => {
 
   try {
     // Upload SBOM to S3
-    await uploadToS3(fileContent, s3Key, process.env.S3_SBOM_BUCKET_NAME);
+    await uploadToS3(fileContent, process.env.S3_SBOM_BUCKET_NAME, s3Key);
 
     // Extract Metadata
     const sbomData = JSON.parse(fileContent);
@@ -159,7 +159,7 @@ app.post('/uploadSBOM', upload.single('file'), async (req, res) => {
       const vulnReportKey = `vuln-reports/${req.file.filename.replace('.json', '_vuln_report.json')}`;
 
       // Upload the vulnerability report to S3
-      await uploadToS3(JSON.stringify(vulnReport), vulnReportKey, process.env.S3_VULN_REPORT_NAME);
+      await uploadToS3(JSON.stringify(vulnReport), process.env.S3_VULN_REPORT_NAME, vulnReportKey);
 
       // Clean up local temp file
       fs.unlinkSync(filePath);
