@@ -1,4 +1,4 @@
-su - ec2-user
+#!/bin/bash
 
 # Install Syft and Grype
 mkdir -p /home/ec2-user/.local/bin
@@ -18,6 +18,11 @@ source /home/ec2-user/.bashrc
 # syft . -o cyclonedx-json > sbom.json
 # grype sbom.json -o table > output.grype
 # cd ..
+
+# Configure new temp directory so that we can install Grype DB
+mkdir $HOME/tmp
+export TMPDIR=$HOME/tmp
+grype db update
 
 # Download FPY api
 curl -L -o app.zip https://github.com/DylBP/SBOM-FYP/archive/refs/heads/main.zip
