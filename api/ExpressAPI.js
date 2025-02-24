@@ -6,7 +6,7 @@ require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
-const { S3Client, ListObjectsV2Command, DeleteObjectsCommand, DeleteBucketCommand, CreateBucketCommand, HeadBucketCommand } = require('@aws-sdk/client-s3');
+const { S3Client, ListObjectsV2Command, DeleteObjectsCommand, DeleteBucketCommand, CreateBucketCommand, HeadBucketCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { DynamoDBClient, CreateTableCommand, DeleteTableCommand } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
 const { exec } = require('child_process');
