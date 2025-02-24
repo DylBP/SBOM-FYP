@@ -6,8 +6,8 @@ require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { DynamoDBClient, CreateTableCommand } = require('@aws-sdk/client-dynamodb');
+const { ListObjectsV2Command, DeleteObjectsCommand, DeleteBucketCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
+const { DynamoDBClient, CreateTableCommand, DeleteTableCommand } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, PutCommand } = require('@aws-sdk/lib-dynamodb');
 const { exec } = require('child_process');
 
@@ -69,6 +69,33 @@ async function createSBOMBucket() {
 createSBOMBucket();
 
 // ================================
+// Delete S3 Bucket on Shutdown
+// ================================
+async function deleteSBOMBucket() {
+  try {
+    // 1️⃣ List all objects in the bucket
+    const listParams = { Bucket: 'sbom-files' };
+    const listedObjects = await s3.send(new ListObjectsV2Command(listParams));
+
+    // 2️⃣ Delete all objects if any exist
+    if (listedObjects.Contents && listedObjects.Contents.length > 0) {
+      const deleteParams = {
+        Bucket: 'sbom-files',
+        Delete: { Objects: listedObjects.Contents.map(({ Key }) => ({ Key })) },
+      };
+      await s3.send(new DeleteObjectsCommand(deleteParams));
+      console.log('🗑️ All objects deleted from "sbom-files".');
+    }
+
+    // 3️⃣ Delete the bucket
+    await s3.send(new DeleteBucketCommand({ Bucket: 'sbom-files' }));
+    console.log('💥 S3 bucket "sbom-files" deleted.');
+  } catch (err) {
+    console.error('❌ Error deleting bucket:', err);
+  }
+}
+
+// ================================
 // Infrastructure: DynamoDB Setup
 // ================================
 async function createSBOMTable() {
@@ -92,6 +119,22 @@ async function createSBOMTable() {
 }
 
 createSBOMTable();
+
+// ================================
+// Delete DynamoDB Table on Shutdown
+// ================================
+async function deleteSBOMTable() {
+  try {
+    await dbClient.send(new DeleteTableCommand({ TableName: 'sbom-table' }));
+    console.log('💥 DynamoDB table "sbom-table" deleted.');
+  } catch (err) {
+    if (err.name === 'ResourceNotFoundException') {
+      console.log('⚠️ DynamoDB table "sbom-table" does not exist.');
+    } else {
+      console.error('❌ Error deleting DynamoDB table:', err);
+    }
+  }
+}
 
 // ================================
 // Multer Middleware (File Upload)
@@ -148,6 +191,27 @@ async function storeMetadataInDynamoDB(filename, metadata, s3Key) {
   await docClient.send(new PutCommand(dbParams));
   console.log('✔️ Metadata stored in DynamoDB');
 }
+
+/**
+ * Graceful shutdown handler
+ */
+const gracefulShutdown = () => {
+  console.log('\n🛑 Shutting down server...');
+
+  Promise.all([deleteSBOMBucket(), deleteSBOMTable()])
+    .then(() => {
+      console.log('✅ Cleanup complete. Exiting.');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('❌ Error during cleanup:', err);
+      process.exit(1);
+    });
+};
+
+process.on('SIGINT', gracefulShutdown);   // Ctrl+C
+process.on('SIGTERM', gracefulShutdown);  // Termination Signal
+
 
 // ================================
 // Routes
