@@ -22,5 +22,3 @@ build/
 # Optional: Ignore IDE/editor configs
 .vscode/
 .idea/
-
-temp/
