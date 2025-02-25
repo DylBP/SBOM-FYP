@@ -33,5 +33,5 @@ cd SBOM-FYP-main/api
 npm install
 
 # Start API using pm2
-node ExpressAPI.js
+pm2 start ExpressAPI.js --name ExpressAPI
 

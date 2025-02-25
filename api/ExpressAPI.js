@@ -278,5 +278,5 @@ app.post('/uploadSBOM', upload.single('file'), async (req, res) => {
 // Start Server
 // ================================
 app.listen(port, () => {
-  console.log(`🚀 Server running at http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
