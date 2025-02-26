@@ -34,12 +34,19 @@ async function processSBOM(req, res) {
     // Extract vulnerability metadata
     const vulnMetadata = extractVulnMetadata(vulnReport, vulnReportKey);
 
+    // Define severity ranking order
+    const severityOrder = ['critical', 'high', 'medium', 'low', 'unknown'];
+
+    // Find the highest severity present in the report
+    const highestSeverity = severityOrder.find(severity => vulnMetadata.severityCounts[severity] > 0) || 'unknown';
+
     // Store extended metadata in DynamoDB
     await storeMetadata(req.file.filename, {
       ...metadata,
       s3Location: s3Key,
       vulnerabilityReport: {
         ...vulnMetadata,
+        highestSeverity,
       },
     });
 
@@ -50,14 +57,14 @@ async function processSBOM(req, res) {
         spdxId: metadata.spdxId,
         createdAt: metadata.creationInfo,
         s3Location: s3Key,
-        supplier: metadata.supplier,
-        license: metadata.license,
+        supplier: metadata.supplier, // Including supplier info if available
+        license: metadata.license, // Including license info
       },
       vulnerabilityReport: {
         s3Location: vulnReportKey,
         totalVulnerabilities: vulnMetadata.totalVulnerabilities,
         severityCounts: vulnMetadata.severityCounts,
-        highestSeverity: Object.keys(vulnMetadata.severityCounts).sort((a, b) => b - a)[0], // Determines the most severe vulnerability
+        highestSeverity, // The most severe vulnerability level
       },
     });
   } catch (err) {
