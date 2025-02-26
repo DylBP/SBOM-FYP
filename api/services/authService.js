@@ -1,5 +1,3 @@
-require('dotenv').config();  // Make sure to load the .env file at the beginning of your code
-
 const { CognitoIdentityProviderClient, SignUpCommand, AdminInitiateAuthCommand } = require('@aws-sdk/client-cognito-identity-provider');
 
 // Load values from environment variables
