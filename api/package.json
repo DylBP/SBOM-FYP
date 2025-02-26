@@ -7,6 +7,7 @@
         "start": "node server.js"
     },
     "dependencies": {
+        "@aws-sdk/client-cognito-identity-provider": "^3.750.0",
         "@aws-sdk/client-dynamodb": "^3.751.0",
         "@aws-sdk/client-s3": "^3.750.0",
         "@aws-sdk/credential-provider-env": "^3.750.0",

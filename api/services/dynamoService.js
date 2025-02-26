@@ -44,24 +44,4 @@ async function storeMetadata(filename, metadata, s3Key) {
   console.log('✔️ Metadata stored in DynamoDB');
 }
 
-/**
- * Deletes the SBOM table
- */
-async function deleteSBOMTable() {
-  const params = {
-    TableName: 'sbom-table',
-  };
-
-  try {
-    const data = await dbClient.send(new DeleteTableCommand(params));
-    console.log('💥 DynamoDB table "sbom-table" deleted:', data.TableDescription.TableName);
-  } catch (err) {
-    if (err.name === 'ResourceNotFoundException') {
-      console.log('⚠️ DynamoDB table "sbom-table" does not exist.');
-    } else {
-      console.error('❌ Error deleting DynamoDB table:', err);
-    }
-  }
-}
-
-module.exports = { storeMetadata, createSBOMTable, deleteSBOMTable };
+module.exports = { storeMetadata, createSBOMTable };

@@ -34,30 +34,6 @@ async function createSBOMBucket() {
 }
 
 /**
- * Function to delete the SBOM bucket on server shutdown
- */
-async function deleteSBOMBucket() {
-  try {
-    const listParams = { Bucket: 'sbom-files' };
-    const listedObjects = await s3.send(new ListObjectsV2Command(listParams));
-
-    if (listedObjects.Contents && listedObjects.Contents.length > 0) {
-      const deleteParams = {
-        Bucket: 'sbom-files',
-        Delete: { Objects: listedObjects.Contents.map(({ Key }) => ({ Key })) },
-      };
-      await s3.send(new DeleteObjectsCommand(deleteParams));
-      console.log('🗑️ All objects deleted from "sbom-files".');
-    }
-
-    await s3.send(new DeleteBucketCommand({ Bucket: 'sbom-files' }));
-    console.log('💥 S3 bucket "sbom-files" deleted.');
-  } catch (err) {
-    console.error('❌ Error deleting bucket:', err);
-  }
-}
-
-/**
  * Uploads a file to S3.
  */
 async function uploadToS3(fileContent, bucketName, s3Key) {
@@ -71,4 +47,4 @@ async function uploadToS3(fileContent, bucketName, s3Key) {
   console.log(`✔️ File uploaded to S3: ${s3Key}`);
 }
 
-module.exports = { uploadToS3, createSBOMBucket, deleteSBOMBucket };
+module.exports = { uploadToS3, createSBOMBucket };
