@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { extractMetadata } = require('../utils/metadataUtils');
+const { extractMetadata, extractVulnMetadata } = require('../utils/metadataUtils');
 const { uploadToS3 } = require('../services/s3Service');
 const { storeMetadata } = require('../services/dynamoService');
 const { scanSBOM, cleanupFile } = require('../services/grypeService');
