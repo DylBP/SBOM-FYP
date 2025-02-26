@@ -27,8 +27,6 @@ async function processSBOM(req, res) {
     const vulnReportKey = `vuln-reports/${req.file.filename.replace('.json', '_vuln_report.json')}`;
     await uploadToS3(JSON.stringify(vulnReport), S3_SBOM_BUCKET_NAME, vulnReportKey);
 
-    cleanupFile(filePath);
-
     res.json({
       message: '✔️ SBOM uploaded, metadata stored, vulnerabilities scanned.',
       s3Location: s3Key,
@@ -37,6 +35,8 @@ async function processSBOM(req, res) {
   } catch (err) {
     console.error('❌ Error:', err);
     res.status(500).json({ error: 'Failed to process SBOM', details: err.message });
+  } finally {
+    cleanupFile(filePath);
   }
 }
 
