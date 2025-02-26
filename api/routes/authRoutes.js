@@ -7,14 +7,14 @@ const router = express.Router();
  * POST /auth/signup
  */
 router.post('/signup', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, username } = req.body;
 
-  if (!email || !password) {
+  if (!email || !password || !username) {
     return res.status(400).json({ message: 'Email and password are required' });
   }
 
   try {
-    const signUpResponse = await signUpUser(email, password);
+    const signUpResponse = await signUpUser(email, password, username);
     res.status(200).json({
       message: 'User signed up successfully',
       userSub: signUpResponse.UserSub,

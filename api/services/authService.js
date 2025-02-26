@@ -9,10 +9,10 @@ const cognitoClient = new CognitoIdentityProviderClient({ region: AWS_REGION });
 /**
  * Signs up a new user to Cognito User Pool.
  */
-async function signUpUser(email, password) {
+async function signUpUser(username, email, password) {
   const params = {
     ClientId: COGNITO_APP_CLIENT_ID,
-    Username: email,
+    Username: username, // Use a separate username instead of email
     Password: password,
     UserAttributes: [
       { Name: 'email', Value: email },
@@ -28,6 +28,7 @@ async function signUpUser(email, password) {
     throw error;
   }
 }
+
 
 /**
  * Signs in an existing user.
