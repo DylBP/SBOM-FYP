@@ -1,5 +1,5 @@
 const express = require('express');
-const { PORT, COGNITO_APP_CLIENT_ID, COGNITO_USER_POOL_ID } = require('./config/env');
+const { PORT } = require('./config/env');
 const sbomRoutes = require('./routes/sbomRoutes');
 const authRoutes = require('./routes/authRoutes'); // Import the auth routes
 const { createSBOMBucket } = require('./services/s3Service');
