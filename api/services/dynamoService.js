@@ -10,18 +10,31 @@ async function createSBOMTable() {
   const params = {
     TableName: DYNAMO_TABLE_NAME,
     AttributeDefinitions: [
-      { AttributeName: 'id', AttributeType: 'S' }, // Partition Key
-      { AttributeName: 'userId', AttributeType: 'S' },
+      { AttributeName: 'id', AttributeType: 'S' },      // Main Partition Key
+      { AttributeName: 'userId', AttributeType: 'S' },  // GSI Key
     ],
-    KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
+    KeySchema: [
+      { AttributeName: 'id', KeyType: 'HASH' },
+    ],
     GlobalSecondaryIndexes: [
       {
-        IndexName: 'userIndex',
-        KeySchema: [{ AttributeName: 'userId', KeyType: 'HASH' }],
-        Projection: { ProjectionType: 'ALL' },
+        IndexName: 'UserIndex', // Name of the GSI
+        KeySchema: [
+          { AttributeName: 'userId', KeyType: 'HASH' }, // GSI partition key
+        ],
+        Projection: {
+          ProjectionType: 'ALL', // Return all attributes when querying by userId
+        },
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 5,
+          WriteCapacityUnits: 5,
+        },
       }
     ],
-    ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
+    ProvisionedThroughput: {
+      ReadCapacityUnits: 5,
+      WriteCapacityUnits: 5,
+    },
   };
 
   try {
