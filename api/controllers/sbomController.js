@@ -10,6 +10,7 @@ const { S3_SBOM_BUCKET_NAME } = require('../config/env');
  * Uploads an SBOM file, extracts metadata, and scans for vulnerabilities.
  */
 async function processSBOM(req, res) {
+  console.log("Processing an SBOM request:\n", req)
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   const filePath = path.join(__dirname, '../temp', req.file.filename);
