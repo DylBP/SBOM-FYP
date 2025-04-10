@@ -1,46 +1,28 @@
-const AWS = require('aws-sdk');
-const { COGNITO_USER_POOL_ID, COGNITO_APP_CLIENT_ID, AWS_REGION } = require('../config/env');
+const express = require('express');
+const { signUpUser, signInUser } = require('../services/authService');
 
-AWS.config.update({ region: AWS_REGION });
+const router = express.Router();
 
-const cognito = new AWS.CognitoIdentityServiceProvider();
+router.post("/signup", async (req, res) => {
+  const { username, password, email } = req.body;
+  try {
+    const data = await signUp(username, password, email);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Sign up failed" });
+  }
+});
 
-/**
- * Signup user with AWS Cognito
- */
-async function signUpUser(email, password, username) {
-  const params = {
-    ClientId: COGNITO_APP_CLIENT_ID,
-    Username: email,
-    Password: password,
-    UserAttributes: [
-      { Name: 'email', Value: email },
-      { Name: 'preferred_username', Value: username },
-    ],
-  };
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const tokens = await signIn(username, password);
+    res.status(200).json(tokens);
+  } catch (error) {
+    console.error(error);
+    res.status(401).json({ message: "Login failed" });
+  }
+});
 
-  return cognito.signUp(params).promise();
-}
-
-/**
- * Sign in user and retrieve JWT tokens
- */
-async function signInUser(email, password) {
-  const params = {
-    AuthFlow: 'USER_PASSWORD_AUTH',
-    ClientId: COGNITO_APP_CLIENT_ID,
-    AuthParameters: {
-      USERNAME: email,
-      PASSWORD: password,
-    },
-  };
-
-  const authResponse = await cognito.initiateAuth(params).promise();
-  return {
-    accessToken: authResponse.AuthenticationResult.AccessToken,
-    idToken: authResponse.AuthenticationResult.IdToken,
-    refreshToken: authResponse.AuthenticationResult.RefreshToken,
-  };
-}
-
-module.exports = { signUpUser, signInUser };
+module.exports = router;

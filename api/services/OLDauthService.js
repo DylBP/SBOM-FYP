@@ -1,7 +1,7 @@
-const { SignUpCommand } = require('@aws-sdk/client-cognito-identity-provider');
-const { cognitoClient } = require('./cognitoService');
+import { SignUpCommand } from "@aws-sdk/client-cognito-identity-provider";
+import cognitoClient from "./cognitoService.js";
 
-async function signUp(username, password, email) {
+export async function signUp(username, password, email) {
   const params = {
     ClientId: process.env.COGNITO_CLIENT_ID,
     Username: username,
@@ -15,5 +15,3 @@ async function signUp(username, password, email) {
   const response = await cognitoClient.send(command);
   return response;
 }
-
-module.exports = { signUp }
