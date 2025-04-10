@@ -1,5 +1,5 @@
 const { PutCommand } = require('@aws-sdk/lib-dynamodb');
-const { CreateTableCommand, DeleteTableCommand } = require('@aws-sdk/client-dynamodb');
+const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 const { dbClient, docClient } = require('../config/awsConfig');
 const { DYNAMO_TABLE_NAME } = require('../config/env');
 
@@ -8,9 +8,19 @@ const { DYNAMO_TABLE_NAME } = require('../config/env');
  */
 async function createSBOMTable() {
   const params = {
-    TableName: 'sbom-table',
-    AttributeDefinitions: [{ AttributeName: 'id', AttributeType: 'S' }], // Partition Key
+    TableName: DYNAMO_TABLE_NAME,
+    AttributeDefinitions: [
+      { AttributeName: 'id', AttributeType: 'S' }, // Partition Key
+      { AttributeName: 'userId', AttributeType: 'S' },
+    ],
     KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: 'userIndex',
+        KeySchema: [{ AttributeName: 'userId', KeyType: 'HASH' }],
+        Projection: { ProjectionType: 'ALL' },
+      }
+    ],
     ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
   };
 
@@ -29,11 +39,12 @@ async function createSBOMTable() {
 /**
  * Stores SBOM and vulnerability report metadata in DynamoDB.
  */
-async function storeMetadata(filename, metadata, s3Key, vulnMetadata = null) {
+async function storeMetadata(filename, metadata, s3Key, userId, vulnMetadata = null) {
   const dbParams = {
     TableName: DYNAMO_TABLE_NAME,
     Item: {
       id: filename,
+      userId: userId,
       name: metadata.name,
       spdxId: metadata.spdxId,
       createdAt: metadata.creationInfo,

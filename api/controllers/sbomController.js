@@ -49,6 +49,7 @@ async function processSBOM(req, res) {
         ...vulnMetadata,
         highestSeverity,
       },
+      userId: req.user.sub
     });
 
     res.status(200).json({
@@ -79,5 +80,7 @@ async function processSBOM(req, res) {
     cleanupFile(filePath);
   }
 }
+
+
 
 module.exports = { processSBOM };
