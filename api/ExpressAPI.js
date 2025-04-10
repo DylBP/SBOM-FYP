@@ -55,7 +55,7 @@ startServer();
 app.get('/', (req, res) => res.send('✅ SBOM API Running!'));
 
 // Public routes (no authentication required)
-app.use('/auth', authRoutes);
+app.use('/auth', authRoutes); // Public (signup/login/confirm)
 
 // Protected routes (authentication required)
-app.use('/api', sbomRoutes);
+app.use('/api', authenticateToken, sbomRoutes);
