@@ -53,25 +53,29 @@ async function createSBOMTable() {
  * Stores SBOM and vulnerability report metadata in DynamoDB.
  */
 async function storeMetadata(filename, metadata, s3Key, userId, vulnMetadata = null) {
-  const dbParams = {
-    TableName: DYNAMO_TABLE_NAME,
-    Item: {
-      id: filename,
-      userId: userId,
-      name: metadata.name,
-      spdxId: metadata.spdxId,
-      createdAt: metadata.creationInfo,
-      s3Location: s3Key,
-    },
+  const { name, spdxId, creationInfo } = metadata;
+
+  const item = {
+    id: filename,
+    userId,
+    name,
+    spdxId,
+    createdAt: creationInfo,
+    s3Location: s3Key,
+    ...(vulnMetadata && { // Only add if vulnMetadata exists
+      vulnReport: {
+        s3Location: vulnMetadata.s3Location,
+        totalVulnerabilities: vulnMetadata.totalVulnerabilities,
+        severityCounts: vulnMetadata.severityCounts,
+        highestSeverity: vulnMetadata.highestSeverity,
+      }
+    }),
   };
 
-  if (vulnMetadata) {
-    dbParams.Item.vulnReport = {
-      s3Location: vulnMetadata.s3Location,
-      totalVulnerabilities: vulnMetadata.totalVulnerabilities,
-      severityCounts: vulnMetadata.severityCounts,
-    };
-  }
+  const dbParams = {
+    TableName: DYNAMO_TABLE_NAME,
+    Item: item,
+  };
 
   await docClient.send(new PutCommand(dbParams));
   console.log('✔️ Metadata stored in DynamoDB');

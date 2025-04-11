@@ -10,7 +10,9 @@ const { S3_SBOM_BUCKET_NAME } = require('../config/env');
  * Uploads an SBOM file, extracts metadata, and scans for vulnerabilities.
  */
 async function processSBOM(req, res) {
-  console.log("Processing an SBOM request:\n", req)
+
+  console.log("🔑 User Sub (Cognito ID):", req.user.sub);
+
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   const filePath = path.join(__dirname, '../temp', req.file.filename);
@@ -42,15 +44,20 @@ async function processSBOM(req, res) {
     const highestSeverity = severityOrder.find(severity => vulnMetadata.severityCounts[severity] > 0) || 'unknown';
 
     // Store extended metadata in DynamoDB
-    await storeMetadata(req.file.filename, {
-      ...metadata,
-      s3Location: s3Key,
-      vulnerabilityReport: {
-        ...vulnMetadata,
-        highestSeverity,
+    await storeMetadata(
+      req.file.filename,
+      {
+        ...metadata,
+        s3Location: s3Key,
+        userId: req.user.sub, // 👈 Add userId inside the metadata object
       },
-      userId: req.user.sub
-    });
+      s3Key,                  // 👈 s3Key as its own argument
+      req.user.sub,            // 👈 userId as its own argument
+      {
+        ...vulnMetadata,
+        highestSeverity,       // 👈 vulnMetadata as its own argument
+      }
+    );
 
     res.status(200).json({
       message: '✔️ SBOM processing completed successfully.',
