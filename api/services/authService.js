@@ -66,4 +66,4 @@ async function logoutUser(refreshToken) {
   return response;
 }
 
-module.exports = { signUp, confirmSignUp, signIn };
+module.exports = { signUp, confirmSignUp, signIn, logoutUser };
