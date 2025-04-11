@@ -1,4 +1,4 @@
-const { signupUser, loginUser, logoutUser, confirmSignUp } = require('../services/authService');
+const { signUp, signIn, logoutUser, confirmSignUp } = require('../services/authService');
 
 /**
  * Register a new user
@@ -6,7 +6,7 @@ const { signupUser, loginUser, logoutUser, confirmSignUp } = require('../service
 async function signup(req, res) {
   try {
     const { username, password, email } = req.body;
-    const result = await signupUser(username, password, email);
+    const result = await signUp(username, password, email);
     res.status(201).json({ message: 'User signed up successfully!', result });
   } catch (error) {
     console.error('Signup error:', error);
@@ -28,7 +28,7 @@ async function signup(req, res) {
 async function login(req, res) {
   try {
     const { username, password } = req.body;
-    const tokens = await loginUser(username, password);
+    const tokens = await signIn(username, password);
     res.status(200).json({ message: 'Login successful!', tokens });
   } catch (error) {
     console.error('Login error:', error);
