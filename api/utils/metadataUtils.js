@@ -46,7 +46,17 @@ function extractMetadata(sbomData) {
       grypeVersion: vulnReport.descriptor?.version || 'Unknown', // Grype version if available
     };
   }
+
+  function normalizeSeverityCounts(severityCounts) {
+    const normalized = {};
+    for (const key in severityCounts) {
+      if (severityCounts.hasOwnProperty(key)) {
+        normalized[key.toLowerCase()] = severityCounts[key];
+      }
+    }
+    return normalized;
+  }
   
   
-  module.exports = { extractMetadata, extractVulnMetadata };
+  module.exports = { extractMetadata, extractVulnMetadata, normalizeSeverityCounts };
   

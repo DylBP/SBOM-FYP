@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { extractMetadata, extractVulnMetadata } = require('../utils/metadataUtils');
+const { extractMetadata, extractVulnMetadata, normalizeSeverityCounts } = require('../utils/metadataUtils');
 const { uploadToS3 } = require('../services/s3Service');
 const { storeMetadata, getUserSBOMs } = require('../services/dynamoService');
 const { scanSBOM, cleanupFile } = require('../services/grypeService');
@@ -36,9 +36,11 @@ async function processSBOM(req, res) {
 
     // Extract vulnerability metadata
     const vulnMetadata = extractVulnMetadata(vulnReport, vulnReportKey);
+    
+    vulnMetadata.severityCounts = normalizeSeverityCounts(vulnMetadata.severityCounts);
 
     // Define severity ranking order
-    const severityOrder = ['Critical', 'High', 'Medium', 'Low', 'Unknown'];
+    const severityOrder = ['critical', 'high', 'medium', 'low', 'unknown'];
 
     // Find the highest severity present in the report
     const highestSeverity = severityOrder.find(severity => vulnMetadata.severityCounts[severity] > 0) || 'unknown';
