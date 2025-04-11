@@ -51,13 +51,13 @@ async function processSBOM(req, res) {
       {
         ...metadata,
         s3Location: s3Key,
-        userId: req.user.sub, // 👈 Add userId inside the metadata object
+        userId: req.user.sub, // Add userId inside the metadata object
       },
-      s3Key,                  // 👈 s3Key as its own argument
-      req.user.sub,            // 👈 userId as its own argument
+      s3Key,                  // s3Key as its own argument
+      req.user.sub,            // userId as its own argument
       {
         ...vulnMetadata,
-        highestSeverity,       // 👈 vulnMetadata as its own argument
+        highestSeverity,       // vulnMetadata as its own argument
       }
     );
 

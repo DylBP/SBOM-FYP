@@ -1,4 +1,4 @@
-const { SignUpCommand, ConfirmSignUpCommand, InitiateAuthCommand } = require('@aws-sdk/client-cognito-identity-provider');
+const { SignUpCommand, ConfirmSignUpCommand, InitiateAuthCommand, RevokeTokenCommand } = require('@aws-sdk/client-cognito-identity-provider');
 const crypto = require('crypto');
 const cognitoClient = require('./cognitoService');
 
@@ -52,6 +52,18 @@ async function signIn(username, password) {
   const response = await cognitoClient.send(command);
 
   return response.AuthenticationResult; // contains id_token, access_token, refresh_token
+}
+
+async function logoutUser(refreshToken) {
+  const params = {
+    ClientId: process.env.COGNITO_CLIENT_ID,
+    ClientSecret: process.env.COGNITO_CLIENT_SECRET,
+    Token: refreshToken
+  };
+
+  const command = new RevokeTokenCommand(params);
+  const response = await cognitoClient.send(command);
+  return response;
 }
 
 module.exports = { signUp, confirmSignUp, signIn };
