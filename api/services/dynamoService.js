@@ -100,7 +100,7 @@ async function getUserSBOMs(userId) {
 
   console.log("🔍 Raw DynamoDB Items:", JSON.stringify(Items, null, 2));
 
-  return Items.map(item => unmarshall(item)); // Convert Dynamo format to JavaScript objects
+  return []; // Convert Dynamo format to JavaScript objects
 }
 
 

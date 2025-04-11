@@ -38,7 +38,7 @@ async function processSBOM(req, res) {
     const vulnMetadata = extractVulnMetadata(vulnReport, vulnReportKey);
 
     // Define severity ranking order
-    const severityOrder = ['critical', 'high', 'medium', 'low', 'unknown'];
+    const severityOrder = ['Critical', 'High', 'Medium', 'Low', 'Unknown'];
 
     // Find the highest severity present in the report
     const highestSeverity = severityOrder.find(severity => vulnMetadata.severityCounts[severity] > 0) || 'unknown';
