@@ -1,7 +1,8 @@
-const { PutCommand } = require('@aws-sdk/lib-dynamodb');
+const { PutCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
 const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 const { dbClient, docClient } = require('../config/awsConfig');
 const { DYNAMO_TABLE_NAME } = require('../config/env');
+const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
 /**
  * Creates the SBOM table
@@ -81,5 +82,24 @@ async function storeMetadata(filename, metadata, s3Key, userId, vulnMetadata = n
   console.log('✔️ Metadata stored in DynamoDB');
 }
 
+/**
+ * Returns all SBOM dynamoDB records for a specific user.
+ */
+async function getUserSBOMs(userId) {
+  const params = {
+    TableName: DYNAMO_TABLE_NAME,
+    IndexName: "UserIndex",
+    KeyConditionExpression: "userId = :uid",
+    ExpressionAttributeValues: {
+      ":uid": { S: userId },
+    },
+  };
 
-module.exports = { storeMetadata, createSBOMTable };
+  const command = new QueryCommand(params);
+  const { Items } = await dbClient.send(command);
+
+  return Items.map(item => unmarshall(item)); // Convert Dynamo format to JavaScript objects
+}
+
+
+module.exports = { storeMetadata, createSBOMTable, getUserSBOMs };

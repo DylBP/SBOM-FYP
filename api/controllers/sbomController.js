@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { extractMetadata, extractVulnMetadata } = require('../utils/metadataUtils');
 const { uploadToS3 } = require('../services/s3Service');
-const { storeMetadata } = require('../services/dynamoService');
+const { storeMetadata, getUserSBOMs } = require('../services/dynamoService');
 const { scanSBOM, cleanupFile } = require('../services/grypeService');
 const { S3_SBOM_BUCKET_NAME } = require('../config/env');
 
@@ -88,6 +88,17 @@ async function processSBOM(req, res) {
   }
 }
 
+async function getMySBOMs(req, res) {
+  try {
+    const userId = req.user.sub;
+    const sboms = await getUserSBOMs(userId);
+    res.status(200).json(sboms);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to retrieve user's SBOMs", error: error.message });
+  }
+}
 
 
-module.exports = { processSBOM };
+
+module.exports = { processSBOM, getMySBOMs };
