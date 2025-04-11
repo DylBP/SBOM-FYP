@@ -91,12 +91,14 @@ async function getUserSBOMs(userId) {
     IndexName: "UserIndex",
     KeyConditionExpression: "userId = :uid",
     ExpressionAttributeValues: {
-      ":uid": { S: userId },
+      ":uid": userId,
     },
   };
 
   const command = new QueryCommand(params);
   const { Items } = await dbClient.send(command);
+
+  console.log("🔍 Raw DynamoDB Items:", JSON.stringify(Items, null, 2));
 
   return Items.map(item => unmarshall(item)); // Convert Dynamo format to JavaScript objects
 }

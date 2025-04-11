@@ -93,8 +93,8 @@ async function getMySBOMs(req, res) {
     const userId = req.user.sub;
     const sboms = await getUserSBOMs(userId);
     res.status(200).json(sboms);
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Failed to retrieve user's SBOMs", error: error.message });
   }
 }
