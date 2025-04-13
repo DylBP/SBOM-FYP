@@ -22,7 +22,7 @@ Write-Host "Instances found: $instanceData"
 
 # Stop all instances
 Write-Host "Stopping instances: $instanceData..."
-aws ec2 stop-instances --instance-ids $instanceData
+aws ec2 terminate-instances --instance-ids $instanceData
 aws ec2 wait instance-stopped --instance-ids $instanceData
 
 Write-Host "All instances have been stopped."

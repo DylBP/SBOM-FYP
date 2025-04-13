@@ -100,8 +100,58 @@ async function getUserSBOMs(userId) {
 
   console.log("🔍 Raw DynamoDB Items:", JSON.stringify(Items, null, 2));
 
-  return Items; 
+  return Items;
 }
 
+/**
+ * Fetch a single SBOM record by ID, only if owned by the specified user.
+ */
+async function getSbomRecord(sbomId, userId) {
+  const params = {
+    TableName: DYNAMO_TABLE_NAME,
+    Key: {
+      id: sbomId,
+    },
+  };
 
-module.exports = { storeMetadata, createSBOMTable, getUserSBOMs };
+  const command = new GetCommand(params);
+  const { Item } = await docClient.send(command);
+
+  if (!Item) {
+    console.log(`❌ SBOM record not found for ID: ${sbomId}`);
+    return null; // Or throw a not found error, depending on your style
+  }
+
+  // Ownership check
+  if (Item.userId !== userId) {
+    console.log(`❌ Unauthorized access attempt for SBOM ID: ${sbomId}`);
+    throw new Error('Unauthorized');  // You will catch this in your controller
+  }
+
+  console.log("🔍 Retrieved SBOM record:", JSON.stringify(Item, null, 2));
+
+  return Item;
+}
+
+/**
+ * Delete a single SBOM record, only if owned by the specified user.
+ */
+async function deleteSbomRecord(sbomId, userId) {
+  const params = {
+    TableName: DYNAMO_TABLE_NAME,
+    Key: {
+      id: sbomId,
+    },
+    ConditionExpression: "userId = :uid",
+    ExpressionAttributeValues: {
+      ":uid": userId,
+    },
+  };
+
+  const command = new DeleteCommand(params);
+  await docClient.send(command);
+
+  console.log(`🗑️ Deleted SBOM record with ID: ${sbomId} owned by User: ${userId}`);
+}
+
+module.exports = { storeMetadata, createSBOMTable, getUserSBOMs, getSbomRecord, deleteSbomRecord };

@@ -1,8 +1,8 @@
 const path = require('path');
 const fs = require('fs');
 const { extractMetadata, extractVulnMetadata, normalizeSeverityCounts } = require('../utils/metadataUtils');
-const { uploadToS3 } = require('../services/s3Service');
-const { storeMetadata, getUserSBOMs } = require('../services/dynamoService');
+const { uploadToS3, deleteFileFromS3 } = require('../services/s3Service');
+const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord } = require('../services/dynamoService');
 const { scanSBOM, cleanupFile } = require('../services/grypeService');
 const { S3_SBOM_BUCKET_NAME } = require('../config/env');
 
@@ -101,6 +101,38 @@ async function getMySBOMs(req, res) {
   }
 }
 
+async function deleteMySBOM(req, res) {
+  const { sbomId } = req.params;
+  const userId = req.user.sub;
 
+  try {
+    const sbomRecord = await getSbomRecord(sbomId, userId);
 
-module.exports = { processSBOM, getMySBOMs };
+    if (!sbomRecord) {
+      return res.status(404).json({ message: 'SBOM record not found' });
+    }
+
+    if (sbomRecord.s3Location) {
+      await deleteFileFromS3(sbomRecord.s3Location);
+    }
+
+    if (sbomRecord.vulnReport?.s3Location) {
+      await deleteFileFromS3(sbomRecord.vulnReport.s3Location);
+    }
+
+    await deleteSbomRecord(sbomId, userId);
+
+    res.status(200).json({ message: '✔️ SBOM and associated files deleted successfully.' });
+
+  } catch (error) {
+    console.error('❌ Error deleting SBOM:', error);
+
+    if (error.name === 'ConditionalCheckFailedException' || error.message === 'Unauthorized') {
+      return res.status(403).json({ message: 'Unauthorized to delete this SBOM record' });
+    }
+
+    res.status(500).json({ message: 'Failed to delete SBOM', error: error.message });
+  }
+}
+
+module.exports = { processSBOM, getMySBOMs, deleteMySBOM };
