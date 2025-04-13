@@ -1,11 +1,12 @@
-const { S3Client, HeadBucketCommand, CreateBucketCommand, DeleteBucketCommand, ListObjectsV2Command, DeleteObjectsCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { HeadBucketCommand, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { s3 } = require('../config/awsConfig');
+const { S3_SBOM_BUCKET_NAME } = require('../config/env'); // <-- Import your bucket name properly
 
 /**
- * Function to create the S3 bucket used to store SBOMS and vulnerability reports
+ * Function to create the S3 bucket used to store SBOMs and vulnerability reports
  */
 async function createSBOMBucket() {
-  const bucketName = 'sbom-files';
+  const bucketName = S3_SBOM_BUCKET_NAME;
 
   try {
     // Check if bucket exists
@@ -47,4 +48,28 @@ async function uploadToS3(fileContent, bucketName, s3Key) {
   console.log(`✔️ File uploaded to S3: ${s3Key}`);
 }
 
-module.exports = { uploadToS3, createSBOMBucket };
+/**
+ * Deletes a file from S3.
+ */
+async function deleteFileFromS3(s3Key) {
+  const bucketName = S3_SBOM_BUCKET_NAME;
+
+  const params = {
+    Bucket: bucketName,
+    Key: s3Key,
+  };
+  
+  try {
+    await s3.send(new DeleteObjectCommand(params));
+    console.log(`🗑️ File deleted from S3: ${s3Key}`);
+  } catch (error) {
+    console.error(`❌ Error deleting file from S3 (${s3Key}):`, error);
+    throw error;
+  }
+}
+
+module.exports = { 
+  uploadToS3, 
+  createSBOMBucket, 
+  deleteFileFromS3 
+};
