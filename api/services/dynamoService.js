@@ -119,13 +119,13 @@ async function getSbomRecord(sbomId, userId) {
 
   if (!Item) {
     console.log(`❌ SBOM record not found for ID: ${sbomId}`);
-    return null; // Or throw a not found error, depending on your style
+    return null;
   }
 
   // Ownership check
   if (Item.userId !== userId) {
     console.log(`❌ Unauthorized access attempt for SBOM ID: ${sbomId}`);
-    throw new Error('Unauthorized');  // You will catch this in your controller
+    throw new Error('Unauthorized');
   }
 
   console.log("🔍 Retrieved SBOM record:", JSON.stringify(Item, null, 2));

@@ -90,6 +90,29 @@ async function processSBOM(req, res) {
   }
 }
 
+async function getSBOMById(req, res) {
+  const { sbomId } = req.params;
+  const userId = req.user.sub;
+
+  try {
+    const sbomRecord = await getSbomRecord(sbomId, userId);
+
+    if (!sbomRecord) {
+      return res.status(404).json({ message: 'SBOM record not found' });
+    }
+
+    res.status(200).json({sbomRecord});
+  } catch (error) {
+    console.error('❌ Error retrieving SBOM:', error);
+
+    if (error.name === 'ConditionalCheckFailedException' || error.message === 'Unauthorized') {
+      return res.status(403).json({ message: 'Unauthorized to access this SBOM record' });
+    }
+
+    res.status(500).json({ message: 'Failed to retrieve SBOM', error: error.message });
+  }
+}
+
 async function getMySBOMs(req, res) {
   try {
     const userId = req.user.sub;
@@ -135,4 +158,4 @@ async function deleteMySBOM(req, res) {
   }
 }
 
-module.exports = { processSBOM, getMySBOMs, deleteMySBOM };
+module.exports = { processSBOM, getMySBOMs, deleteMySBOM, getSBOMById };

@@ -9,7 +9,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchSboms = async () => {
       try {
-        const response = await axios.get('/sbom/list');  // 🛑 <-- UPDATE with your real API endpoint if different
+        const response = await axios.get('/api/my-sboms');  // 🛑 <-- UPDATE with your real API endpoint if different
         setSboms(response.data);  // assume backend returns an array
       } catch (error) {
         console.error(error);
@@ -33,8 +33,8 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {sboms.map((sbom) => (
               <div key={sbom.id} className="border p-4 rounded shadow hover:shadow-lg transition">
-                <h2 className="text-xl font-semibold">{sbom.fileName || "Unnamed SBOM"}</h2>
-                <p className="text-gray-600">Uploaded on: {sbom.uploadDate || "Unknown date"}</p>
+                <h2 className="text-xl font-semibold">{sbom.name || "Unnamed SBOM"}</h2>
+                <p className="text-gray-600">Uploaded on: {sbom.createdAt || "Unknown date"}</p>
                 <a href={`/sbom/${sbom.id}`} className="text-blue-500 underline mt-2 inline-block">
                   View Details
                 </a>
