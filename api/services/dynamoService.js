@@ -1,4 +1,4 @@
-const { PutCommand, QueryCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
+const { PutCommand, QueryCommand, GetCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
 const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 const { dbClient, docClient } = require('../config/awsConfig');
 const { DYNAMO_TABLE_NAME } = require('../config/env');

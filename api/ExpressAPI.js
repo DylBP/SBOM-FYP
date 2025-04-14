@@ -8,8 +8,16 @@ const { createSBOMBucket } = require('./services/s3Service');
 const { createSBOMTable } = require('./services/dynamoService');
 const { deleteSBOMBucket, deleteSBOMTable } = require('./services/cleanupService');
 
+const cors = require('cors');
+
 const app = express();
 app.use(express.json());
+
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}))
 
 // Initialize resources (S3, DynamoDB)
 async function initializeResources() {
