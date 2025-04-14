@@ -95,7 +95,7 @@ async function getSBOMById(req, res) {
   const userId = req.user.sub;
 
   try {
-    const sbomRecord = await getSbomRecord(sbomId);
+    const sbomRecord = await getSbomRecord(sbomId, userId);
 
     if (!sbomRecord) {
       return res.status(404).json({ message: 'SBOM record not found' });
