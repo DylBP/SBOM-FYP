@@ -95,20 +95,20 @@ async function getSBOMById(req, res) {
   const userId = req.user.sub;
 
   try {
-    const sbomRecord = await getSbomRecord(sbomId, userId);
+    const sbomRecord = await getSbomRecord(sbomId);
 
     if (!sbomRecord) {
       return res.status(404).json({ message: 'SBOM record not found' });
     }
-
-    res.status(200).json({sbomRecord});
-  } catch (error) {
-    console.error('❌ Error retrieving SBOM:', error);
-
-    if (error.name === 'ConditionalCheckFailedException' || error.message === 'Unauthorized') {
-      return res.status(403).json({ message: 'Unauthorized to access this SBOM record' });
+    
+    if (sbomRecord.userId !== userId) {
+      return res.status(403).json({ message: 'Unauthorized to view this SBOM' });
     }
 
+    res.status(200).json(sbomRecord);
+
+  } catch (error) {
+    console.error('❌ Error fetching SBOM:', error);
     res.status(500).json({ message: 'Failed to retrieve SBOM', error: error.message });
   }
 }

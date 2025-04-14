@@ -11,7 +11,7 @@ const SBOMDetails = () => {
   useEffect(() => {
     const fetchSBOMDetails = async () => {
       try {
-        const res = await axios.get(`/sbom/${id}`);  // <-- API call to fetch SBOM details
+        const res = await axios.get(`/api/my-sboms/${id}`);  // <-- API call to fetch SBOM details
         setSbom(res.data);
       } catch (error) {
         console.error(error);

@@ -112,25 +112,31 @@ async function getSbomRecord(sbomId, userId) {
     Key: {
       id: sbomId,
     },
+    ConditionExpression: "userId = :uid",
+    ExpressionAttributeValues: {
+      ":uid": userId,
+    },
   };
 
-  const command = new GetCommand(params);
-  const { Item } = await docClient.send(command);
+  try {
+    const result = await docClient.send(new GetCommand(params));
 
-  if (!Item) {
-    console.log(`❌ SBOM record not found for ID: ${sbomId}`);
-    return null;
+    if (!result.Item) {
+      console.log(`⚠️ SBOM with ID ${sbomId} not found.`);
+      return null;
+    }
+
+    if (result.Item.userId !== userId) {
+      console.log(`🚫 Unauthorized access: User ${userId} tried to access SBOM ${sbomId}`);
+      throw new Error("Unauthorized");
+    }
+
+    console.log(`✅ Retrieved SBOM record with ID: ${sbomId} owned by User: ${userId}`);
+    return result.Item;
+  } catch (error) {
+    console.error('❌ Error retrieving SBOM:', error);
+    throw error;
   }
-
-  // Ownership check
-  if (Item.userId !== userId) {
-    console.log(`❌ Unauthorized access attempt for SBOM ID: ${sbomId}`);
-    throw new Error('Unauthorized');
-  }
-
-  console.log("🔍 Retrieved SBOM record:", JSON.stringify(Item, null, 2));
-
-  return Item;
 }
 
 /**
