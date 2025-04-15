@@ -11,7 +11,7 @@ const SBOMDetails = () => {
   useEffect(() => {
     const fetchSBOMDetails = async () => {
       try {
-        const res = await axios.get(`/api/my-sboms/${id}`);  // <-- API call to fetch SBOM details
+        const res = await axios.get(`/api/my-sboms/${id}`);
         setSbom(res.data);
       } catch (error) {
         console.error(error);
@@ -23,12 +23,20 @@ const SBOMDetails = () => {
     fetchSBOMDetails();
   }, [id]);
 
+  const severityColors = {
+    critical: "bg-red-600 text-white",
+    high: "bg-orange-500 text-white",
+    medium: "bg-yellow-400 text-black",
+    low: "bg-green-400 text-black",
+    unknown: "bg-gray-400 text-black",
+  };
+
   if (loading) {
     return (
       <>
         <Navbar />
-        <div className="p-6">
-          <p>Loading SBOM details...</p>
+        <div className="pt-20 px-6 min-h-screen flex items-center justify-center bg-gray-100">
+          <p className="text-gray-600 text-center">Loading SBOM details...</p>
         </div>
       </>
     );
@@ -38,34 +46,71 @@ const SBOMDetails = () => {
     return (
       <>
         <Navbar />
-        <div className="p-6">
-          <p>No SBOM found.</p>
+        <div className="pt-20 px-6 min-h-screen flex items-center justify-center bg-gray-100">
+          <p className="text-red-500 text-center">No SBOM found.</p>
         </div>
       </>
     );
   }
 
+  const { name, spdxId, createdAt, s3Location, vulnReport } = sbom;
+
   return (
     <>
       <Navbar />
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">SBOM Details</h1>
+      <div className="pt-20 px-6 py-12 min-h-screen bg-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center">📄 SBOM Metadata</h1>
 
-        <div className="space-y-2">
-          <p><strong>File Name:</strong> {sbom.fileName || 'Unknown'}</p>
-          <p><strong>Uploaded At:</strong> {sbom.uploadDate || 'Unknown'}</p>
+          <div className="bg-white shadow-md rounded-lg p-6 space-y-4 border border-gray-200">
+            <p><strong>📁 File Name:</strong> {sbom.id}</p>
+            <p><strong>📌 SPDX ID:</strong> {spdxId}</p>
+            <p><strong>📦 Package Path:</strong> {name}</p>
+            <p><strong>📅 Created At:</strong> {new Date(createdAt).toLocaleString()}</p>
+            <p>
+              <strong>☁️ S3 Location:</strong>{" "}
+              <code className="text-sm text-gray-600 break-all">{s3Location}</code>
+            </p>
+          </div>
 
-          {/* Example if your API sends vulnerabilities or metadata */}
-          {sbom.vulnerabilities && sbom.vulnerabilities.length > 0 && (
-            <div className="mt-4">
-              <h2 className="text-xl font-semibold mb-2">Vulnerabilities</h2>
-              <ul className="list-disc pl-6">
-                {sbom.vulnerabilities.map((vuln, index) => (
-                  <li key={index}>
-                    {vuln.name} - {vuln.severity}
-                  </li>
+          {vulnReport && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-semibold mb-4 text-red-700 text-center">
+                🚨 Vulnerability Report
+              </h2>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {Object.entries(vulnReport.severityCounts).map(([severity, count]) => (
+                  <div
+                    key={severity}
+                    className={`p-4 rounded-lg shadow text-center font-medium ${severityColors[severity] || severityColors.unknown}`}
+                  >
+                    <div className="text-base capitalize">{severity}</div>
+                    <div className="text-2xl font-bold">{count}</div>
+                  </div>
                 ))}
-              </ul>
+              </div>
+
+              <div className="mt-6 text-lg space-y-2">
+                <p>
+                  <strong>🔍 Total Vulnerabilities:</strong>{" "}
+                  <span className="font-semibold">{vulnReport.totalVulnerabilities}</span>
+                </p>
+                <p>
+                  <strong>🔥 Highest Severity:</strong>{" "}
+                  <span
+                    className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${
+                      severityColors[vulnReport.highestSeverity] || severityColors.unknown
+                    }`}
+                  >
+                    {vulnReport.highestSeverity.toUpperCase()}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-500 break-all">
+                  🧾 Raw report stored at:{" "}
+                  <code>{vulnReport.s3Location}</code>
+                </p>
+              </div>
             </div>
           )}
         </div>

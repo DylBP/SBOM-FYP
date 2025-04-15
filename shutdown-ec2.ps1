@@ -1,28 +1,67 @@
 param (
     [string]$LaunchTemplateId = "lt-01c26f364cefbf067",
-    [string]$LaunchTemplateVersion = "11"
+    [string]$LaunchTemplateVersion = "11",
+    [switch]$DryRun
 )
 
-Write-Host "Fetching running EC2 instances using Launch Template ID: $LaunchTemplateId and Version: $LaunchTemplateVersion..."
+function Get-InstancesByLaunchTemplate {
+    param (
+        [string]$TemplateId,
+        [string]$TemplateVersion
+    )
 
-# Get all instance IDs matching the launch template
-$instanceData = aws ec2 describe-instances `
-    --filters "Name=instance-state-name,Values=running" `
-              "Name=tag:aws:ec2launchtemplate:id,Values=$LaunchTemplateId" `
-              "Name=tag:aws:ec2launchtemplate:version,Values=$LaunchTemplateVersion" `
-    --query "Reservations[*].Instances[*].InstanceId" `
-    --output text
+    Write-Host "Searching for running instances using Launch Template ID: $TemplateId and Version: $TemplateVersion..."
 
-if (-not $instanceData) {
-    Write-Host "No running instances found for Launch Template ID: $LaunchTemplateId"
-    exit 1
+    $instanceData = aws ec2 describe-instances `
+        --filters "Name=instance-state-name,Values=running" `
+                  "Name=tag:aws:ec2launchtemplate:id,Values=$TemplateId" `
+                  "Name=tag:aws:ec2launchtemplate:version,Values=$TemplateVersion" `
+        --query "Reservations[*].Instances[*].InstanceId" `
+        --output text
+
+    return $instanceData
 }
 
-Write-Host "Instances found: $instanceData"
+function Terminate-Instances {
+    param (
+        [string[]]$InstanceIds
+    )
 
-# Stop all instances
-Write-Host "Stopping instances: $instanceData..."
-aws ec2 terminate-instances --instance-ids $instanceData
-aws ec2 wait instance-stopped --instance-ids $instanceData
+    Write-Host "Terminating the following instances: $InstanceIds"
+    
+    if ($DryRun) {
+        Write-Host "Dry run enabled. No instances will be terminated."
+        return
+    }
 
-Write-Host "All instances have been stopped."
+    try {
+        aws ec2 terminate-instances --instance-ids $InstanceIds
+        Write-Host "Waiting for termination..."
+        aws ec2 wait instance-terminated --instance-ids $InstanceIds
+        Write-Host "All instances have been terminated."
+    } catch {
+        Write-Error "Failed to terminate instances. Error: $_"
+        exit 1
+    }
+}
+
+# --- MAIN EXECUTION ---
+
+$instances = Get-InstancesByLaunchTemplate -TemplateId $LaunchTemplateId -TemplateVersion $LaunchTemplateVersion
+
+if (-not $instances) {
+    Write-Host "No running instances found for this template version."
+    exit 0
+}
+
+Write-Host "Found instances: $instances"
+
+if (-not $DryRun) {
+    $confirm = Read-Host "Are you sure you want to terminate these instances? (yes/no)"
+    if ($confirm -ne "yes") {
+        Write-Host "Termination cancelled."
+        exit 0
+    }
+}
+
+Terminate-Instances -InstanceIds $instances
