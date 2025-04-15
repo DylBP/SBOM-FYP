@@ -63,7 +63,7 @@ async function storeMetadata(filename, metadata, s3Key, userId, vulnMetadata = n
     spdxId,
     createdAt: creationInfo,
     s3Location: s3Key,
-    ...(vulnMetadata && { // Only add if vulnMetadata exists
+    ...(vulnMetadata && {
       vulnReport: {
         s3Location: vulnMetadata.s3Location,
         totalVulnerabilities: vulnMetadata.totalVulnerabilities,

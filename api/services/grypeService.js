@@ -1,4 +1,4 @@
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 const fs = require('fs');
 
 /**
@@ -6,7 +6,7 @@ const fs = require('fs');
  */
 async function scanSBOM(filePath) {
   return new Promise((resolve, reject) => {
-    exec(`grype ${filePath} -o json`, (error, stdout, stderr) => {
+    execFile('grype', [filePath, '-o', 'json'], { timeout: 30000 }, (error, stdout, stderr) => {
       if (error) {
         console.error(`❌ Grype Error: ${stderr}`);
         return reject(new Error(`Failed to scan SBOM: ${stderr}`));
