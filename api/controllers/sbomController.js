@@ -168,23 +168,31 @@ async function generateSBOMFromArtifact(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   const zipFilePath = path.join(__dirname, '../temp', req.file.filename);
+
   let extractedDir;
+  let sbomPath;
 
   try {
     const extractedDir = extractZipToTempDir(zipFilePath);
-    const sbom = await generateSBOM('dir', extractedDir, 'cyclonedx-json');
+    const sbomPath = await generateSBOM('dir', extractedDir, 'cyclonedx-json');
 
-    res.download(sbom, 'sbom.json')
+    res.download(sbom, 'sbom.json', () => {
+      cleanupFile(sbomPath);
+      cleanupDirectory(zipFilePath);
+      if (extractedDir) cleanupDirectory(extractedDir);
+    });
+
   } catch (err) {
     console.error('❌ Failed to generate SBOM from archive:', err.message);
     res.status(500).json({
       error: 'Failed to generate SBOM from archive',
       details: err.message,
     });
-  } finally {
-    cleanupFile(zipFilePath);
-    cleanupDirectory(extractedDir);
   }
+
+  cleanupFile(zipFilePath);
+  if (sbomPath) cleanupFile(sbomPath);
+  if (extractedDir) cleanupDirectory(extractedDir);
 }
 
 module.exports = { processSBOM, getMySBOMs, deleteMySBOM, getSBOMById, generateSBOMFromArtifact };
