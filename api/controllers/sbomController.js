@@ -176,7 +176,7 @@ async function generateSBOMFromArtifact(req, res) {
     const extractedDir = extractZipToTempDir(zipFilePath);
     const sbomPath = await generateSBOM('dir', extractedDir, 'cyclonedx-json');
 
-    res.download(sbom, 'sbom.json', () => {
+    res.download(sbomPath, 'sbom.json', () => {
       cleanupFile(sbomPath);
       cleanupDirectory(zipFilePath);
       if (extractedDir) cleanupDirectory(extractedDir);
