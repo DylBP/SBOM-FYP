@@ -8,8 +8,8 @@ async function generateSBOM(inputType, inputPath, outputFormat = 'cyclonedx-json
   const syftArgs = buildSyftArgs(inputType, inputPath, outputFormat);
 
   return new Promise((resolve, reject) => {
-    execFile('syft', syftArgs, { timeout: 30000 }, (error, stdout, stderr) => {
-      if (error) {
+    execFile('syft', syftArgs, { timeout: 30000, env: { ...process.env, SYFT_LOG: 'error'} }, (error, stdout, stderr) => {
+      if (error && !stdout) {
         console.error(`❌ Syft Error: ${stderr}`);
         return reject(new Error(`Failed to generate SBOM: ${stderr}`));
       }
