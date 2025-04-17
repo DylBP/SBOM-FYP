@@ -2,6 +2,7 @@ const express = require('express');
 const { PORT } = require('./config/env');
 const sbomRoutes = require('./routes/sbomRoutes');
 const authRoutes = require('./routes/authRoutes');
+const projectRoutes = require('./routes/projectRoutes');
 const {authenticateToken } = require('./middlewares/authMiddleware');
 
 const { createSBOMBucket } = require('./services/s3Service');
@@ -67,3 +68,6 @@ app.use('/auth', authRoutes); // Public (signup/login/confirm)
 
 // Protected routes (authentication required)
 app.use('/api', authenticateToken, sbomRoutes);
+
+// Project routes (authentication required)
+app.use('/api/projects', authenticateToken, projectRoutes);

@@ -3,6 +3,7 @@ const fs = require('fs');
 const { extractMetadata, extractVulnMetadata, normalizeSeverityCounts } = require('../utils/metadataUtils');
 const { uploadToS3, deleteFileFromS3 } = require('../services/s3Service');
 const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord } = require('../services/dynamoService');
+const { generateSBOM, cleanupFile } = require('../services/syftService');
 const { scanSBOM, cleanupFile } = require('../services/grypeService');
 const { S3_SBOM_BUCKET_NAME } = require('../config/env');
 
@@ -155,4 +156,23 @@ async function deleteMySBOM(req, res) {
   }
 }
 
-module.exports = { processSBOM, getMySBOMs, deleteMySBOM, getSBOMById };
+/**
+ * ----- Generators -----
+ */
+async function generateSBOMFromArtifact(req, res) {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const filePath = path.join(__dirname, '../temp', req.file.filename);
+
+  try {
+    const sbom = await generateSBOM('file', filePath, 'cyclonedx-json');
+    res.status(200).json(sbom);
+  } catch (error) {
+    console.error('❌ Error generating SBOM:', error);
+    res.status(500).json({ message: 'Failed to generate SBOM', error: error.message });
+  } finally {
+    cleanupFile(filePath)
+  }
+}
+
+module.exports = { processSBOM, getMySBOMs, deleteMySBOM, getSBOMById, generateSBOMFromArtifact };

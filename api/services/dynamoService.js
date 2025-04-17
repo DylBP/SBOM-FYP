@@ -160,4 +160,34 @@ async function deleteSbomRecord(sbomId, userId) {
   console.log(`🗑️ Deleted SBOM record with ID: ${sbomId} owned by User: ${userId}`);
 }
 
-module.exports = { storeMetadata, createSBOMTable, getUserSBOMs, getSbomRecord, deleteSbomRecord };
+/**
+ * Creates a project object
+ */
+async function createProject(userId, projectId, name, description = "", tags = []) {
+  const params = {
+    TableName: DYNAMO_TABLE_NAME,
+    Item: {
+      id: `PROJECT#${projectId}`,
+      userId,
+      projectId,
+      name,
+      description,
+      tags,
+      createdAt: new Date().toISOString(),
+    },
+    ConditionExpression: 'attribute_not_exists(id)', // Prevent overwrite
+  };
+
+  try {
+    await docClient.send(new PutCommand(params));
+    console.log(`📁 Project '${projectId}' created for user ${userId}`);
+  } catch (err) {
+    if (err.name === 'ConditionalCheckFailedException') {
+      throw new Error('Project already exists');
+    }
+    console.error('❌ Error creating project:', err);
+    throw err;
+  }
+}
+
+module.exports = { storeMetadata, createSBOMTable, getUserSBOMs, getSbomRecord, deleteSbomRecord, createProject };
