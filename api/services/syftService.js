@@ -53,7 +53,7 @@ function buildSyftArgs(inputType, inputPath, outputFormat, outputFilePath) {
       throw new Error(`Unsupported input type: ${inputType}`);
   }
 
-  return [source, '-o', outputFormat, '-f', outputFilePath];
+  return [source, '-o', outputFormat, '--file', outputFilePath];
 }
 
 module.exports = {
