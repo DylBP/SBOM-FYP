@@ -168,6 +168,7 @@ async function generateSBOMFromArtifact(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   const zipFilePath = path.join(__dirname, '../temp', req.file.filename);
+  let extractedDir;
 
   try {
     const extractedDir = extractZipToTempDir(zipFilePath);
