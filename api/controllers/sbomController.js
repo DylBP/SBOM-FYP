@@ -173,7 +173,7 @@ async function generateSBOMFromArtifact(req, res) {
     const extractedDir = extractZipToTempDir(zipFilePath);
     const sbom = await generateSBOM('dir', extractedDir, 'cyclonedx-json');
 
-    res.status(200).json(sbom);
+    res.download(sbom, 'sbom.json')
   } catch (err) {
     console.error('❌ Failed to generate SBOM from archive:', err.message);
     res.status(500).json({
