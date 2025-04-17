@@ -5,7 +5,8 @@ const { uploadToS3, deleteFileFromS3 } = require('../services/s3Service');
 const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord } = require('../services/dynamoService');
 const { generateSBOM } = require('../services/syftService');
 const { scanSBOM } = require('../services/grypeService');
-const { cleanupFile } = require('../services/cleanupService');
+const { cleanupFile, cleanupDirectory } = require('../services/cleanupService');
+const { extractZipToTempDir } = require('../utils/archiveUtils');
 const { S3_SBOM_BUCKET_NAME } = require('../config/env');
 
 /**
@@ -160,19 +161,29 @@ async function deleteMySBOM(req, res) {
 /**
  * ----- Generators -----
  */
+
+/**
+ * Generates an SBOM from a zipped project directory.
+ */
 async function generateSBOMFromArtifact(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-  const filePath = path.join(__dirname, '../temp', req.file.filename);
+  const zipFilePath = path.join(__dirname, '../temp', req.file.filename);
 
   try {
-    const sbom = await generateSBOM('file', filePath, 'cyclonedx-json');
+    const extractedDir = extractZipToTempDir(zipFilePath);
+    const sbom = await generateSBOM('dir', extractedDir, 'cyclonedx-json');
+
     res.status(200).json(sbom);
-  } catch (error) {
-    console.error('❌ Error generating SBOM:', error);
-    res.status(500).json({ message: 'Failed to generate SBOM', error: error.message });
+  } catch (err) {
+    console.error('❌ Failed to generate SBOM from archive:', err.message);
+    res.status(500).json({
+      error: 'Failed to generate SBOM from archive',
+      details: err.message,
+    });
   } finally {
-    cleanupFile(filePath)
+    cleanupFile(zipFilePath);
+    cleanupDirectory(extractedDir);
   }
 }
 
