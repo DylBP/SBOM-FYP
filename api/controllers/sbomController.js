@@ -4,7 +4,8 @@ const { extractMetadata, extractVulnMetadata, normalizeSeverityCounts } = requir
 const { uploadToS3, deleteFileFromS3 } = require('../services/s3Service');
 const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord } = require('../services/dynamoService');
 const { generateSBOM, cleanupFile } = require('../services/syftService');
-const { scanSBOM, cleanupFile } = require('../services/grypeService');
+const { scanSBOM } = require('../services/grypeService');
+const { cleanupFile } = require('../services/cleanupService');
 const { S3_SBOM_BUCKET_NAME } = require('../config/env');
 
 /**

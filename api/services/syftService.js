@@ -52,21 +52,6 @@ function buildSyftArgs(inputType, inputPath, outputFormat) {
   return [source, '-o', outputFormat];
 }
 
-/**
- * Deletes a temporary file.
- */
-function cleanupFile(filePath) {
-  try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      console.log(`🗑️ Deleted file: ${filePath}`);
-    }
-  } catch (error) {
-    console.error(`❌ Error deleting file: ${error.message}`);
-  }
-}
-
 module.exports = {
-  generateSBOM,
-  cleanupFile,
+  generateSBOM
 };

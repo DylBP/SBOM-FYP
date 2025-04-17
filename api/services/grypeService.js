@@ -1,5 +1,4 @@
 const { execFile } = require('child_process');
-const fs = require('fs');
 
 /**
  * Runs Grype to scan an SBOM file for vulnerabilities.
@@ -21,18 +20,4 @@ async function scanSBOM(filePath) {
   });
 }
 
-/**
- * Deletes a file after processing.
- */
-function cleanupFile(filePath) {
-  try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      console.log(`🗑️ Deleted file: ${filePath}`);
-    }
-  } catch (error) {
-    console.error(`❌ Error deleting file: ${error.message}`);
-  }
-}
-
-module.exports = { scanSBOM, cleanupFile };
+module.exports = { scanSBOM };

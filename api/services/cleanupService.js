@@ -6,6 +6,7 @@ const {
   const { DeleteTableCommand } = require('@aws-sdk/client-dynamodb');
   const { DeleteUserPoolCommand, DeleteUserPoolClientCommand } = require('@aws-sdk/client-cognito-identity-provider');
   const { s3, dbClient, cognitoClient } = require('../config/awsConfig');
+  const fs = require('fs');
   
   // ================================
   // Delete S3 Bucket on Shutdown
@@ -73,10 +74,25 @@ const {
       console.error('❌ Error deleting Cognito resources:', err);
     }
   }
+
+  /**
+ * Deletes a file after processing.
+ */
+function cleanupFile(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`🗑️ Deleted file: ${filePath}`);
+    }
+  } catch (error) {
+    console.error(`❌ Error deleting file: ${error.message}`);
+  }
+}
   
   module.exports = { 
     deleteSBOMBucket, 
     deleteSBOMTable, 
-    deleteCognitoResources 
+    deleteCognitoResources,
+    cleanupFile
   };
   
