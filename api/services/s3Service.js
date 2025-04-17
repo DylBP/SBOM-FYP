@@ -1,12 +1,11 @@
 const { HeadBucketCommand, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { s3 } = require('../config/awsConfig');
-const { S3_SBOM_BUCKET_NAME } = require('../config/env'); // <-- Import your bucket name properly
 
 /**
  * Function to create the S3 bucket used to store SBOMs and vulnerability reports
  */
 async function createSBOMBucket() {
-  const bucketName = S3_SBOM_BUCKET_NAME;
+  const bucketName = process.env.S3_SBOM_BUCKET_NAME;
 
   try {
     // Check if bucket exists

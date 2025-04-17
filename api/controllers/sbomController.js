@@ -7,7 +7,6 @@ const { generateSBOM } = require('../services/syftService');
 const { scanSBOM } = require('../services/grypeService');
 const { cleanupFile, cleanupDirectory } = require('../services/cleanupService');
 const { extractZipToTempDir } = require('../utils/archiveUtils');
-const { S3_SBOM_BUCKET_NAME } = require('../config/env');
 
 /**
  * Uploads an SBOM file, extracts metadata, and scans for vulnerabilities.
@@ -21,7 +20,7 @@ async function processSBOM(req, res) {
 
   try {
     // Upload SBOM to S3
-    await uploadToS3(fileContent, S3_SBOM_BUCKET_NAME, s3Key);
+    await uploadToS3(fileContent, process.env.S3_SBOM_BUCKET_NAME, s3Key);
 
     // Extract SBOM metadata
     const sbomData = JSON.parse(fileContent);
@@ -32,7 +31,7 @@ async function processSBOM(req, res) {
     const vulnReportKey = `vuln-reports/${req.file.filename.replace('.json', '_vuln_report.json')}`;
 
     // Upload vulnerability report to S3
-    await uploadToS3(JSON.stringify(vulnReport), S3_SBOM_BUCKET_NAME, vulnReportKey);
+    await uploadToS3(JSON.stringify(vulnReport), process.env.S3_SBOM_BUCKET_NAME, vulnReportKey);
 
     // Extract vulnerability metadata
     const vulnMetadata = extractVulnMetadata(vulnReport, vulnReportKey);

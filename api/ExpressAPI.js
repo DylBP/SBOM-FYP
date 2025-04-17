@@ -1,5 +1,4 @@
 const express = require('express');
-const { PORT } = require('./config/env');
 const sbomRoutes = require('./routes/sbomRoutes');
 const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
@@ -8,6 +7,8 @@ const {authenticateToken } = require('./middlewares/authMiddleware');
 const { createSBOMBucket } = require('./services/s3Service');
 const { createSBOMTable } = require('./services/dynamoService');
 const { deleteSBOMBucket, deleteSBOMTable } = require('./services/cleanupService');
+
+require('dotenv').config();
 
 const cors = require('cors');
 
@@ -48,8 +49,8 @@ process.on('SIGINT', gracefulShutdown);
 async function startServer() {
   try {
     await initializeResources();
-    const server = app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
+    const server = app.listen(process.env.PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${process.env.PORT}`);
     });
     module.exports = server;
   } catch (error) {

@@ -1,15 +1,13 @@
 const { PutCommand, QueryCommand, GetCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
 const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 const { dbClient, docClient } = require('../config/awsConfig');
-const { DYNAMO_TABLE_NAME } = require('../config/env');
-const { unmarshall } = require("@aws-sdk/util-dynamodb");
 
 /**
  * Creates the SBOM table
  */
 async function createSBOMTable() {
   const params = {
-    TableName: DYNAMO_TABLE_NAME,
+    TableName: process.env.DYNAMO_TABLE_NAME,
     AttributeDefinitions: [
       { AttributeName: 'id', AttributeType: 'S' },      // Main Partition Key
       { AttributeName: 'userId', AttributeType: 'S' },  // GSI Key
@@ -74,7 +72,7 @@ async function storeMetadata(filename, metadata, s3Key, userId, vulnMetadata = n
   };
 
   const dbParams = {
-    TableName: DYNAMO_TABLE_NAME,
+    TableName: process.env.DYNAMO_TABLE_NAME,
     Item: item,
   };
 
@@ -87,7 +85,7 @@ async function storeMetadata(filename, metadata, s3Key, userId, vulnMetadata = n
  */
 async function getUserSBOMs(userId) {
   const params = {
-    TableName: DYNAMO_TABLE_NAME,
+    TableName: process.env.DYNAMO_TABLE_NAME,
     IndexName: "UserIndex",
     KeyConditionExpression: "userId = :uid",
     ExpressionAttributeValues: {
@@ -108,7 +106,7 @@ async function getUserSBOMs(userId) {
  */
 async function getSbomRecord(sbomId, userId) {
   const params = {
-    TableName: DYNAMO_TABLE_NAME,
+    TableName: process.env.DYNAMO_TABLE_NAME,
     Key: {
       id: sbomId,
     },
@@ -144,7 +142,7 @@ async function getSbomRecord(sbomId, userId) {
  */
 async function deleteSbomRecord(sbomId, userId) {
   const params = {
-    TableName: DYNAMO_TABLE_NAME,
+    TableName: process.env.DYNAMO_TABLE_NAME,
     Key: {
       id: sbomId,
     },
@@ -165,7 +163,7 @@ async function deleteSbomRecord(sbomId, userId) {
  */
 async function createProject(userId, projectId, name, description = "", tags = []) {
   const params = {
-    TableName: DYNAMO_TABLE_NAME,
+    TableName: process.env.DYNAMO_TABLE_NAME,
     Item: {
       id: `PROJECT#${projectId}`,
       userId,
