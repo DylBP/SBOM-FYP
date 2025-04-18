@@ -1,5 +1,5 @@
 const path = require('path');
-const { generateFromArchive, generateFromDockerImage, generateFromOCIArchive } = require('../services/generatorService');
+const { generateFromArchive, generateFromDockerImage, generateFromOCIArchive, generateFromRegistryImage } = require('../services/generatorService');
 
 async function handleSBOMGeneration(req, res) {
     const inputType = req.body.inputType || 'archive';
@@ -19,6 +19,11 @@ async function handleSBOMGeneration(req, res) {
         const tarPath = path.join(__dirname, '../temp', req.file.filename);
         result = await generateFromOCIArchive(tarPath);
   
+      } else if (inputType === 'registry') {
+        const imageName = req.body.image;
+        if (!imageName) return res.status(400).json({ error: 'Missing image name for registry scan' });
+        result = await generateFromRegistryImage(imageName);
+  
       } else {
         return res.status(400).json({ error: 'Unsupported input type' });
       }
@@ -31,7 +36,7 @@ async function handleSBOMGeneration(req, res) {
       console.error('❌ SBOM generation failed:', err.message);
       res.status(500).json({ error: 'Failed to generate SBOM', details: err.message });
     }
-}
+  }
 
 module.exports = {
   handleSBOMGeneration,
