@@ -7,6 +7,7 @@ import Upload from "./pages/Upload";
 import SBOMDetails from "./pages/SBOMDetails";
 import ConfirmSignup from "./pages/ConfirmSignup";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Generator from "./pages/Generator";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
           <Route path="/sbom/:id" element={<ProtectedRoute><SBOMDetails /></ProtectedRoute>} />
+          <Route path="/generate" element={<ProtectedRoute><Generator /></ProtectedRoute>} />
           <Route path="/confirm-signup" element={<ConfirmSignup />} />
         </Routes>
       </Router>

@@ -38,6 +38,7 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {navLink("/", "Dashboard")}
             {navLink("/upload", "Upload")}
+            {navLink("/generate", "Generate SBOMs")}
             <button
               onClick={handleLogout}
               className="rounded-md bg-red-500 hover:bg-red-600 text-white px-3 py-2 text-sm font-medium transition duration-200"
