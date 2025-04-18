@@ -23,7 +23,7 @@ async function generateSBOM(inputType, inputPath, outputFormat = 'cyclonedx-json
         return reject(new Error(`SBOM file not created at: ${outputFilePath}`));
       }
 
-      resolve(outputFilePath); // Return the path to the generated file
+      resolve(outputFilePath);
     });
   });
 }

@@ -28,7 +28,18 @@ async function generateFromDockerImage(imageName) {
   };
 }
 
+async function generateFromOCIArchive(tarPath) {
+    const sbomPath = await generateSBOM('oci-archive', tarPath, 'cyclonedx-json');
+    return {
+        sbomPath,
+        cleanup: () => {
+            cleanupFile(sbomPath);
+        },
+    }
+}
+
 module.exports = {
   generateFromArchive,
   generateFromDockerImage,
+  generateFromOCIArchive,
 };
