@@ -23,7 +23,7 @@ async function generateFromDockerImage(imageName) {
   return {
     sbomPath,
     cleanup: () => {
-      cleanupFile(sbomPath); // only the output file to clean
+      cleanupFile(sbomPath);
     },
   };
 }
