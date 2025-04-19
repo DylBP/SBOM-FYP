@@ -1,4 +1,4 @@
-const { HeadBucketCommand, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { HeadBucketCommand, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { s3 } = require('../config/awsConfig');
 
 /**
