@@ -277,4 +277,16 @@ async function deleteSbomRecord(sbomId, userId) {
   console.log(`🗑️ Deleted SBOM record with ID: ${sbomId} owned by User: ${userId}`);
 }
 
-module.exports = { storeMetadata, createSBOMTable, getUserSBOMs, getSbomRecord, deleteSbomRecord, createProjectsTable, putProject, getProject, listProjects, updateProject, deleteProject, getProjectSBOMs };
+module.exports = { 
+  storeMetadata,
+  createSBOMTable,
+  getUserSBOMs,
+  getSbomRecord,
+  deleteSbomRecord,
+  createProjectsTable,
+  putProject,
+  getProject,
+  listProjects,
+  updateProject,
+  deleteProject,
+  getProjectSBOMs };

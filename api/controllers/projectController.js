@@ -5,6 +5,7 @@ const {
   listProjects,
   updateProject,
   deleteProject,
+  getProjectSBOMs
 } = require('../services/dynamoService');
 
 /**
