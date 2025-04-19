@@ -23,7 +23,7 @@ async function createProjectsTable() {
     ],
     BillingMode: 'PAY_PER_REQUEST',
     GlobalSecondaryIndexes: [{
-      IndexName: 'projectId-index',
+      IndexName: 'projectId-userId-index',
       KeySchema: [
         { AttributeName: 'projectId', KeyType: 'HASH' },
         { AttributeName: 'userId',    KeyType: 'RANGE' },
@@ -114,7 +114,7 @@ async function getProjectSBOMs(projectId) {
     ExpressionAttributeValues: { ':p': projectId}
   };
 
-  const { Items } = await dbClient.send(new QueryCommand(params));
+  const { Items } = await docClient.send(new QueryCommand(params));
   return Items;
 }
 
@@ -129,6 +129,8 @@ async function createSBOMTable() {
     AttributeDefinitions: [
       { AttributeName: 'id', AttributeType: 'S' },      // Main Partition Key
       { AttributeName: 'userId', AttributeType: 'S' },  // GSI Key
+      { AttributeName: 'projectId', AttributeType: 'S' },
+      { AttributeName: 'createdAt', AttributeType: 'S' },
     ],
     KeySchema: [
       { AttributeName: 'id', KeyType: 'HASH' },
@@ -146,6 +148,14 @@ async function createSBOMTable() {
           ReadCapacityUnits: 5,
           WriteCapacityUnits: 5,
         },
+      },
+      {
+        IndexName: 'projectId-index',
+        KeySchema: [
+          { AttributeName: 'projectId', KeyType: 'HASH' },
+          { AttributeName: 'createdAt', KeyType: 'RANGE' },
+        ],
+        Projection: { ProjectionType: 'ALL' },
       }
     ],
     ProvisionedThroughput: {
