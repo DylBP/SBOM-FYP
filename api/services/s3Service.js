@@ -82,19 +82,17 @@ function streamToString(stream) {
 /**
  * Downloads and parses a JSON file from S3 given an s3://bucket/key URI
  */
-async function downloadAndParseJSONFromS3(s3Uri) {
-  const [, , bucket, ...keyParts] = s3Uri.split('/');
-  const key = keyParts.join('/');
+async function downloadAndParseJSONFromS3(key, bucket) {
+  if (!bucket) throw new Error("Bucket name must be provided");
 
-  try {
-    const command = new GetObjectCommand({ Bucket: bucket, Key: key });
-    const response = await s3.send(command);
-    const body = await streamToString(response.Body);
-    return JSON.parse(body);
-  } catch (err) {
-    console.error(`❌ Failed to download or parse JSON from ${s3Uri}:`, err);
-    throw err;
-  }
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  const response = await s3.send(command);
+  const body = await streamToString(response.Body);
+  return JSON.parse(body);
 }
 
 module.exports = { 
