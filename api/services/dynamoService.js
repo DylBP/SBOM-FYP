@@ -1,5 +1,5 @@
 const { PutCommand, QueryCommand, GetCommand, DeleteCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
-const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
+const { CreateTableCommand, ProvisionedThroughputExceededException, BillingMode } = require('@aws-sdk/client-dynamodb');
 const { dbClient, docClient } = require('../config/awsConfig');
 
 const SBOM_TABLE = process.env.DYNAMO_SBOM_TABLE;
@@ -127,27 +127,22 @@ async function createSBOMTable() {
   const params = {
     TableName: SBOM_TABLE,
     AttributeDefinitions: [
-      { AttributeName: 'id', AttributeType: 'S' },      // Main Partition Key
-      { AttributeName: 'userId', AttributeType: 'S' },  // GSI Key
+      { AttributeName: 'id', AttributeType: 'S' },
+      { AttributeName: 'userId', AttributeType: 'S' },
       { AttributeName: 'projectId', AttributeType: 'S' },
       { AttributeName: 'createdAt', AttributeType: 'S' },
     ],
     KeySchema: [
       { AttributeName: 'id', KeyType: 'HASH' },
     ],
+    BillingMode: 'PAY_PER_REQUEST',  // <- add this
     GlobalSecondaryIndexes: [
       {
-        IndexName: 'UserIndex', // Name of the GSI
+        IndexName: 'UserIndex',
         KeySchema: [
-          { AttributeName: 'userId', KeyType: 'HASH' }, // GSI partition key
+          { AttributeName: 'userId', KeyType: 'HASH' },
         ],
-        Projection: {
-          ProjectionType: 'ALL', // Return all attributes when querying by userId
-        },
-        ProvisionedThroughput: {
-          ReadCapacityUnits: 5,
-          WriteCapacityUnits: 5,
-        },
+        Projection: { ProjectionType: 'ALL' },
       },
       {
         IndexName: 'projectId-index',
@@ -158,10 +153,6 @@ async function createSBOMTable() {
         Projection: { ProjectionType: 'ALL' },
       }
     ],
-    ProvisionedThroughput: {
-      ReadCapacityUnits: 5,
-      WriteCapacityUnits: 5,
-    },
   };
 
   try {
