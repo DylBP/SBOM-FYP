@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const sbomRoutes = require('./routes/sbomRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -5,10 +7,8 @@ const projectRoutes = require('./routes/projectRoutes');
 const {authenticateToken } = require('./middlewares/authMiddleware');
 
 const { createSBOMBucket } = require('./services/s3Service');
-const { createSBOMTable } = require('./services/dynamoService');
-const { deleteSBOMBucket, deleteSBOMTable } = require('./services/cleanupService');
-
-require('dotenv').config();
+const { createSBOMTable, createProjectsTable } = require('./services/dynamoService');
+const { deleteSBOMBucket, deleteTables } = require('./services/cleanupService');
 
 const cors = require('cors');
 
@@ -26,6 +26,7 @@ async function initializeResources() {
   try {
     await createSBOMBucket();
     await createSBOMTable();
+    await createProjectsTable();
     console.log(`✔️ SBOM Bucket and Table created successfully!`);
   } catch (error) {
     console.error('❌ Error initializing resources:', error);
@@ -37,7 +38,7 @@ async function initializeResources() {
 async function gracefulShutdown() {
   console.log('🔔 Shutting down gracefully...');
   await deleteSBOMBucket();
-  await deleteSBOMTable();
+  await deleteTables();
   console.log('✅ Cleanup complete. Server shutting down...');
   process.exit(0);
 }

@@ -2,87 +2,86 @@ const path = require('path');
 const fs = require('fs');
 const { extractMetadata, extractVulnMetadata, normalizeSeverityCounts } = require('../utils/metadataUtils');
 const { uploadToS3, deleteFileFromS3 } = require('../services/s3Service');
-const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord } = require('../services/dynamoService');
+const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord, getProject, getProjectSBOMs } = require('../services/dynamoService');
 const { generateSBOM } = require('../services/syftService');
 const { scanSBOM } = require('../services/grypeService');
 const { cleanupFile, cleanupDirectory } = require('../services/cleanupService');
 const { extractZipToTempDir } = require('../utils/archiveUtils');
 
 /**
- * Uploads an SBOM file, extracts metadata, and scans for vulnerabilities.
+ * Uploads an SBOM file, extracts metadata, scans for vulnerabilities,
+ * and (optionally) associates the SBOM with a Project.
  */
 async function processSBOM(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  // ──────────────────────────────────────
+  // Optional project linkage
+  // ──────────────────────────────────────
+  const { projectId } = req.body;               // may be undefined
+  if (projectId) {
+    const project = await getProject(req.user.sub, projectId);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+  }
 
   const filePath = path.join(__dirname, '../temp', req.file.filename);
   const fileContent = fs.readFileSync(filePath);
   const s3Key = `sboms/${req.file.filename}`;
 
   try {
-    // Upload SBOM to S3
+    // Upload SBOM file to S3
     await uploadToS3(fileContent, process.env.S3_SBOM_BUCKET_NAME, s3Key);
 
     // Extract SBOM metadata
-    const sbomData = JSON.parse(fileContent);
-    const metadata = extractMetadata(sbomData);
+    const sbomData  = JSON.parse(fileContent);
+    const metadata  = extractMetadata(sbomData);
 
-    // Scan SBOM for vulnerabilities
-    const vulnReport = await scanSBOM(filePath);
+    // Scan for vulnerabilities with Grype
+    const vulnReport    = await scanSBOM(filePath);
     const vulnReportKey = `vuln-reports/${req.file.filename.replace('.json', '_vuln_report.json')}`;
-
-    // Upload vulnerability report to S3
     await uploadToS3(JSON.stringify(vulnReport), process.env.S3_SBOM_BUCKET_NAME, vulnReportKey);
 
-    // Extract vulnerability metadata
-    const vulnMetadata = extractVulnMetadata(vulnReport, vulnReportKey);
-    
-    vulnMetadata.severityCounts = normalizeSeverityCounts(vulnMetadata.severityCounts);
+    // Prepare vulnerability summary
+    const vulnMeta              = extractVulnMetadata(vulnReport, vulnReportKey);
+    vulnMeta.severityCounts     = normalizeSeverityCounts(vulnMeta.severityCounts);
+    const severityOrder         = ['critical', 'high', 'medium', 'low', 'unknown'];
+    const highestSeverity       = severityOrder.find(s => vulnMeta.severityCounts[s] > 0) || 'unknown';
 
-    // Define severity ranking order
-    const severityOrder = ['critical', 'high', 'medium', 'low', 'unknown'];
-
-    // Find the highest severity present in the report
-    const highestSeverity = severityOrder.find(severity => vulnMetadata.severityCounts[severity] > 0) || 'unknown';
-
-    // Store extended metadata in DynamoDB
+    // 5️⃣ Persist metadata in DynamoDB
     await storeMetadata(
-      req.file.filename,
-      {
-        ...metadata,
-        s3Location: s3Key,
-        userId: req.user.sub, // Add userId inside the metadata object
-      },
-      s3Key,                  // s3Key as its own argument
-      req.user.sub,            // userId as its own argument
-      {
-        ...vulnMetadata,
-        highestSeverity,       // vulnMetadata as its own argument
-      }
+      req.file.filename,        // PK / id
+      { ...metadata },          // SBOM metadata
+      s3Key,                    // SBOM S3 key
+      req.user.sub,             // userId (owner)
+      projectId ?? null,        // NEW: nullable projectId foreign‑key
+      { ...vulnMeta, highestSeverity }
     );
 
+    // 6️⃣ Response
     res.status(200).json({
-      message: '✔️ SBOM processing completed successfully.',
+      message: '✔️ SBOM processed successfully',
+      projectId: projectId ?? null,
       sbomMetadata: {
-        name: metadata.name,
-        spdxId: metadata.spdxId,
-        createdAt: metadata.creationInfo,
-        s3Location: s3Key,
-        supplier: metadata.supplier, // Including supplier info if available
-        license: metadata.license, // Including license info
+        name:        metadata.name,
+        spdxId:      metadata.spdxId,
+        createdAt:   metadata.creationInfo,
+        s3Location:  s3Key,
+        supplier:    metadata.supplier,
+        license:     metadata.license,
       },
       vulnerabilityReport: {
-        s3Location: vulnReportKey,
-        totalVulnerabilities: vulnMetadata.totalVulnerabilities,
-        severityCounts: vulnMetadata.severityCounts,
-        highestSeverity, // The most severe vulnerability level
+        s3Location:           vulnReportKey,
+        totalVulnerabilities: vulnMeta.totalVulnerabilities,
+        severityCounts:       vulnMeta.severityCounts,
+        highestSeverity,
       },
     });
   } catch (err) {
-    console.error('❌ Error:', err);
+    console.error('❌ SBOM processing error:', err);
     res.status(500).json({
-      error: 'Failed to process SBOM',
+      error:   'Failed to process SBOM',
       details: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+      stack:   process.env.NODE_ENV === 'development' ? err.stack : undefined,
     });
   } finally {
     cleanupFile(filePath);
