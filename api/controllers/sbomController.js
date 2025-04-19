@@ -156,6 +156,41 @@ async function deleteMySBOM(req, res) {
   }
 }
 
+async function getParsedSbomWithVulns(req, res) {
+  const { id } = req.params;
+  const userId = req.user.sub;
+
+  try {
+    // Lookup metadata from DynamoDB
+    const result = await docClient.send(
+      new GetCommand({ TableName: SBOM_TABLE, Key: { id } })
+    );
+
+    const sbom = result.Item;
+    if (!sbom || sbom.userId !== userId) {
+      return res.status(404).json({ message: "SBOM not found or access denied." });
+    }
+
+    // Download and parse the SBOM JSON from S3
+    const sbomJson = await downloadAndParseJSONFromS3(sbom.s3Location);
+
+    // Optionally download the Grype report
+    let vulnJson = null;
+    if (sbom.vulnReport?.s3Location) {
+      try {
+        vulnJson = await downloadAndParseJSONFromS3(sbom.vulnReport.s3Location);
+      } catch (err) {
+        console.warn("⚠️ Failed to load vuln report:", err.message);
+      }
+    }
+
+    return res.json({ sbom: sbomJson, vulnReport: vulnJson });
+  } catch (err) {
+    console.error("❌ Failed to retrieve or parse SBOM:", err);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+}
+
 /**
  * ----- Generators -----
  */
@@ -194,4 +229,4 @@ async function generateSBOMFromArtifact(req, res) {
   if (extractedDir) cleanupDirectory(extractedDir);
 }
 
-module.exports = { processSBOM, getMySBOMs, deleteMySBOM, getSBOMById, generateSBOMFromArtifact };
+module.exports = { processSBOM, getMySBOMs, deleteMySBOM, getSBOMById, generateSBOMFromArtifact, getParsedSbomWithVulns };

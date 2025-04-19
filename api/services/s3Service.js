@@ -67,8 +67,39 @@ async function deleteFileFromS3(s3Key) {
   }
 }
 
+/**
+ * Convert S3 ReadableStream into a string
+ */
+function streamToString(stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+  });
+}
+
+/**
+ * Downloads and parses a JSON file from S3 given an s3://bucket/key URI
+ */
+async function downloadAndParseJSONFromS3(s3Uri) {
+  const [, , bucket, ...keyParts] = s3Uri.split('/');
+  const key = keyParts.join('/');
+
+  try {
+    const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+    const response = await s3.send(command);
+    const body = await streamToString(response.Body);
+    return JSON.parse(body);
+  } catch (err) {
+    console.error(`❌ Failed to download or parse JSON from ${s3Uri}:`, err);
+    throw err;
+  }
+}
+
 module.exports = { 
   uploadToS3, 
   createSBOMBucket, 
-  deleteFileFromS3 
+  deleteFileFromS3 ,
+  downloadAndParseJSONFromS3
 };
