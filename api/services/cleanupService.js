@@ -40,9 +40,9 @@ const {
   // ================================
   async function deleteTables() {
     try {
-      await dbClient.send(new DeleteTableCommand({ TableName: process.env.DYNAMO_TABLE_NAME }));
-      await dbClient.send(new DeleteTableCommand({ TableName: process.env.PROJECTS_TABLE_NAME }));
-      console.log('💥 DynamoDB table "sbom-table" deleted.');
+      await dbClient.send(new DeleteTableCommand({ TableName: process.env.DYNAMO_SBOM_TABLE }));
+      await dbClient.send(new DeleteTableCommand({ TableName: process.env.DYNAMO_PROJECTS_TABLE }));
+      console.log('Tables Deleted:', process.env.DYNAMO_SBOM_TABLE, process.env.DYNAMO_PROJECTS_TABLE);
     } catch (err) {
       if (err.name === 'ResourceNotFoundException') {
         console.log('⚠️ DynamoDB table "sbom-table" does not exist.');

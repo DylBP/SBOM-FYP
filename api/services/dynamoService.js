@@ -2,8 +2,8 @@ const { PutCommand, QueryCommand, GetCommand, DeleteCommand, UpdateCommand } = r
 const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 const { dbClient, docClient } = require('../config/awsConfig');
 
-const TABLE_NAME = process.env.DYNAMO_TABLE_NAME;
-const PROJECTS_TABLE = process.env.PROJECTS_TABLE_NAME;
+const SBOM_TABLE = process.env.DYNAMO_SBOM_TABLE;
+const PROJECTS_TABLE = process.env.DYNAMO_PROJECTS_TABLE;
 
 // Projects Structure ------------------------------------------------------
 
@@ -108,7 +108,7 @@ async function deleteProject(userId, projectId) {
 
 async function getProjectSBOMs(projectId) {
   const params = {
-    TableName: TABLE_NAME,
+    TableName: SBOM_TABLE,
     IndexName: 'projectId-index',
     KeyConditionExpression: "projectId = :p",
     ExpressionAttributeValues: { ':p': projectId}
@@ -125,7 +125,7 @@ async function getProjectSBOMs(projectId) {
  */
 async function createSBOMTable() {
   const params = {
-    TableName: TABLE_NAME,
+    TableName: SBOM_TABLE,
     AttributeDefinitions: [
       { AttributeName: 'id', AttributeType: 'S' },      // Main Partition Key
       { AttributeName: 'userId', AttributeType: 'S' },  // GSI Key
@@ -191,7 +191,7 @@ async function storeMetadata(filename, metadata, s3Key, userId, projectId, vulnM
   };
 
   const dbParams = {
-    TableName: TABLE_NAME,
+    TableName: SBOM_TABLE,
     Item: item,
   };
 
@@ -204,7 +204,7 @@ async function storeMetadata(filename, metadata, s3Key, userId, projectId, vulnM
  */
 async function getUserSBOMs(userId) {
   const params = {
-    TableName: TABLE_NAME,
+    TableName: SBOM_TABLE,
     IndexName: "UserIndex",
     KeyConditionExpression: "userId = :uid",
     ExpressionAttributeValues: {
@@ -225,7 +225,7 @@ async function getUserSBOMs(userId) {
  */
 async function getSbomRecord(sbomId, userId) {
   const params = {
-    TableName: TABLE_NAME,
+    TableName: SBOM_TABLE,
     Key: {
       id: sbomId,
     },
@@ -261,7 +261,7 @@ async function getSbomRecord(sbomId, userId) {
  */
 async function deleteSbomRecord(sbomId, userId) {
   const params = {
-    TableName: TABLE_NAME,
+    TableName: SBOM_TABLE,
     Key: {
       id: sbomId,
     },
