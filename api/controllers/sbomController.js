@@ -175,7 +175,7 @@ async function getParsedSbomWithVulns(req, res) {
     let vulnJson = null;
     if (sbom.vulnReport?.s3Location) {
       try {
-        vulnJson = await downloadAndParseJSONFromS3(sbom.vulnReport.s3Location);
+        vulnJson = await downloadAndParseJSONFromS3(sbom.vulnReport.s3Location, process.env.S3_SBOM_BUCKET_NAME);
       } catch (err) {
         console.warn("⚠️ Failed to load vuln report:", err.message);
       }
