@@ -169,7 +169,7 @@ async function getParsedSbomWithVulns(req, res) {
     }
 
     // Download and parse the SBOM JSON from S3
-    const sbomJson = await downloadAndParseJSONFromS3(sbom.s3Location);
+    const sbomJson = await downloadAndParseJSONFromS3(sbom.s3Location, process.env.S3_SBOM_BUCKET_NAME);
 
     // Optionally download the Grype report
     let vulnJson = null;
