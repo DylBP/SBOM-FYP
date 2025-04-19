@@ -227,13 +227,7 @@ async function getUserSBOMs(userId) {
 async function getSbomRecord(sbomId, userId) {
   const params = {
     TableName: SBOM_TABLE,
-    Key: {
-      id: sbomId,
-    },
-    ConditionExpression: "userId = :uid",
-    ExpressionAttributeValues: {
-      ":uid": userId,
-    },
+    Key: { id: sbomId },
   };
 
   try {

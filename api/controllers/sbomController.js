@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { extractMetadata, extractVulnMetadata, normalizeSeverityCounts } = require('../utils/metadataUtils');
-const { uploadToS3, deleteFileFromS3 } = require('../services/s3Service');
+const { uploadToS3, deleteFileFromS3, downloadAndParseJSONFromS3 } = require('../services/s3Service');
 const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord, getProject, getProjectSBOMs } = require('../services/dynamoService');
 const { generateSBOM } = require('../services/syftService');
 const { scanSBOM } = require('../services/grypeService');
@@ -161,13 +161,10 @@ async function getParsedSbomWithVulns(req, res) {
   const userId = req.user.sub;
 
   try {
-    // Lookup metadata from DynamoDB
-    const result = await docClient.send(
-      new GetCommand({ TableName: SBOM_TABLE, Key: { id } })
-    );
+    // Use dynamoService to fetch and validate the SBOM record
+    const sbom = await getSbomRecord(id, userId);
 
-    const sbom = result.Item;
-    if (!sbom || sbom.userId !== userId) {
+    if (!sbom) {
       return res.status(404).json({ message: "SBOM not found or access denied." });
     }
 
@@ -187,6 +184,9 @@ async function getParsedSbomWithVulns(req, res) {
     return res.json({ sbom: sbomJson, vulnReport: vulnJson });
   } catch (err) {
     console.error("❌ Failed to retrieve or parse SBOM:", err);
+    if (err.message === "Unauthorized") {
+      return res.status(403).json({ message: "Access denied." });
+    }
     return res.status(500).json({ message: "Internal server error." });
   }
 }
