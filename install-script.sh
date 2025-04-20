@@ -28,9 +28,9 @@ export TMPDIR=$HOME/tmp
 grype db update
 
 # Download FPY api
-curl -L -o app.zip https://github.com/DylBP/SBOM-FYP/archive/refs/heads/main.zip
+curl -L -o app.zip https://github.com/DylBP/SBOM-FYP/archive/refs/heads/experimental.zip
 unzip app.zip
-cd SBOM-FYP-main/api
+cd SBOM-FYP-experimental/api
 
 # Install API dependencies
 npm install

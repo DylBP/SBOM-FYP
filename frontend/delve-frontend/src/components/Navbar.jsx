@@ -37,7 +37,6 @@ const Navbar = () => {
           {/* Links + Logout */}
           <div className="flex items-center gap-4">
             {navLink("/", "Dashboard")}
-            {navLink("/upload", "Upload")}
             {navLink("/generate", "Generate SBOMs")}
             <button
               onClick={handleLogout}

@@ -38,10 +38,11 @@ const {
   // ================================
   // Delete DynamoDB Table on Shutdown
   // ================================
-  async function deleteSBOMTable() {
+  async function deleteTables() {
     try {
-      await dbClient.send(new DeleteTableCommand({ TableName: 'sbom-table' }));
-      console.log('💥 DynamoDB table "sbom-table" deleted.');
+      await dbClient.send(new DeleteTableCommand({ TableName: process.env.DYNAMO_SBOM_TABLE }));
+      await dbClient.send(new DeleteTableCommand({ TableName: process.env.DYNAMO_PROJECTS_TABLE }));
+      console.log('Tables Deleted:', process.env.DYNAMO_SBOM_TABLE, process.env.DYNAMO_PROJECTS_TABLE);
     } catch (err) {
       if (err.name === 'ResourceNotFoundException') {
         console.log('⚠️ DynamoDB table "sbom-table" does not exist.');
@@ -105,7 +106,7 @@ function cleanupDirectory(directoryPath) {
   
   module.exports = { 
     deleteSBOMBucket, 
-    deleteSBOMTable, 
+    deleteTables, 
     deleteCognitoResources,
     cleanupFile,
     cleanupDirectory

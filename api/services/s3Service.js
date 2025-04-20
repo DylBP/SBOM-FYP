@@ -1,4 +1,4 @@
-const { HeadBucketCommand, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { HeadBucketCommand, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { s3 } = require('../config/awsConfig');
 
 /**
@@ -67,8 +67,37 @@ async function deleteFileFromS3(s3Key) {
   }
 }
 
+/**
+ * Convert S3 ReadableStream into a string
+ */
+function streamToString(stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+  });
+}
+
+/**
+ * Downloads and parses a JSON file from S3 given an s3://bucket/key URI
+ */
+async function downloadAndParseJSONFromS3(key, bucket) {
+  if (!bucket) throw new Error("Bucket name must be provided");
+
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  const response = await s3.send(command);
+  const body = await streamToString(response.Body);
+  return JSON.parse(body);
+}
+
 module.exports = { 
   uploadToS3, 
   createSBOMBucket, 
-  deleteFileFromS3 
+  deleteFileFromS3 ,
+  downloadAndParseJSONFromS3
 };
