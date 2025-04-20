@@ -46,6 +46,12 @@ async function authenticateToken(req, res, next) {
     if (err) {
       return res.status(401).json({ message: "Token verification failed" });
     }
+
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < now) {
+      return res.status(401).json({ message: "Token has expired" });
+    }
+    
     req.user = payload; // Save decoded token payload (user info) to request
     next();
   });
