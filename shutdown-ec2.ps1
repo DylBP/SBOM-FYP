@@ -1,6 +1,6 @@
 param (
     [string]$LaunchTemplateId = "lt-01c26f364cefbf067",
-    [string]$LaunchTemplateVersion = "15",
+    [string]$LaunchTemplateVersion = "16",
     [switch]$DryRun
 )
 

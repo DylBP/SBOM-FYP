@@ -9,13 +9,15 @@ const SBOMDetails = () => {
   const [loading, setLoading] = useState(true);
   const [parsed, setParsed] = useState(null);
   const [parsedLoading, setParsedLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [vulnSearch, setVulnSearch] = useState("");
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
         const metaRes = await axios.get(`/api/my-sboms/${id}`);
         setSbom(metaRes.data);
-  
+
         const parsedRes = await axios.get(`/api/${id}/parsed`);
         setParsed(parsedRes.data);
       } catch (err) {
@@ -25,7 +27,7 @@ const SBOMDetails = () => {
         setParsedLoading(false);
       }
     };
-  
+
     fetchDetails();
   }, [id]);
 
@@ -59,7 +61,16 @@ const SBOMDetails = () => {
     );
   }
 
-  const { name, spdxId, createdAt, s3Location, vulnReport } = sbom;
+  const { name, createdAt, s3Location, vulnReport } = sbom;
+
+  const filteredComponents = parsed?.sbom?.components?.filter((comp) =>
+    comp.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredVulns = parsed?.vulnReport?.matches?.filter((match) =>
+    match.artifact?.name?.toLowerCase().includes(vulnSearch.toLowerCase()) ||
+    match.vulnerability?.id?.toLowerCase().includes(vulnSearch.toLowerCase())
+  );
 
   return (
     <>
@@ -67,10 +78,9 @@ const SBOMDetails = () => {
       <div className="pt-20 px-6 py-12 min-h-screen bg-gray-100">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center">📄 SBOM Metadata</h1>
-  
+
           <div className="bg-white shadow-md rounded-lg p-6 space-y-4 border border-gray-200">
             <p><strong>📁 File Name:</strong> {sbom.id}</p>
-            <p><strong>📌 SPDX ID:</strong> {spdxId}</p>
             <p><strong>📦 Package Path:</strong> {name}</p>
             <p><strong>📅 Created At:</strong> {new Date(createdAt).toLocaleString()}</p>
             <p>
@@ -78,34 +88,53 @@ const SBOMDetails = () => {
               <code className="text-sm text-gray-600 break-all">{s3Location}</code>
             </p>
           </div>
-  
-          {/* Parsed SBOM Content */}
-          {!parsedLoading && parsed?.sbom && (
+
+          {/* Parsed SBOM Component List with Search */}
+          {!parsedLoading && parsed?.sbom?.components && (
             <div className="mt-12">
-              <h2 className="text-2xl font-semibold mb-4 text-blue-700 text-center">🧾 Parsed SBOM Content</h2>
-              <div className="bg-white shadow-md rounded-lg p-6 space-y-4 border border-gray-200 text-sm">
-                <p><strong>SPDX ID:</strong> {parsed.sbom.spdxId || "N/A"}</p>
-                <p><strong>Total Packages:</strong> {parsed.sbom.packages?.length || 0}</p>
-                {parsed.sbom.packages?.length > 0 && (
-                  <ul className="list-disc ml-6 mt-2">
-                    {parsed.sbom.packages.slice(0, 5).map((pkg, idx) => (
-                      <li key={idx}>
-                        {pkg.name} {pkg.version ? `v${pkg.version}` : ""} {pkg.license ? `— ${pkg.license}` : ""}
-                      </li>
-                    ))}
+              <h2 className="text-2xl font-semibold mb-4 text-blue-700 text-center">📦 Components</h2>
+
+              <input
+                type="text"
+                placeholder="Search components..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded mb-4"
+              />
+
+              <div className="bg-white rounded-lg p-4 border border-gray-200 max-h-[500px] overflow-y-auto text-sm">
+                {filteredComponents?.length > 0 ? (
+                  <ul className="space-y-4">
+                    {filteredComponents.map((comp, idx) => {
+                      const language = comp.properties?.find(p => p.name === "syft:package:language")?.value || "Unknown";
+                      const location = comp.properties?.find(p => p.name === "syft:file:location")?.value || "Unknown";
+                      const license = comp.licenses?.[0]?.license?.id || "Unknown";
+                      return (
+                        <li key={idx} className="border-b pb-3">
+                          <p><strong>{comp.name}</strong> {comp.version && `v${comp.version}`}</p>
+                          <p className="text-gray-600">
+                            📦 Type: {comp.type || "Unknown"} | 🧠 Lang: {language} | 🪪 License: {license}
+                            <br />
+                            📁 Path: {location}
+                          </p>
+                        </li>
+                      );
+                    })}
                   </ul>
+                ) : (
+                  <p className="text-gray-500">No components match your search.</p>
                 )}
               </div>
             </div>
           )}
-  
+
           {/* Raw Vuln Summary */}
           {vulnReport && (
             <div className="mt-12">
               <h2 className="text-2xl font-semibold mb-4 text-red-700 text-center">
                 🚨 Vulnerability Report Summary
               </h2>
-  
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {Object.entries(vulnReport.severityCounts).map(([severity, count]) => (
                   <div
@@ -117,7 +146,7 @@ const SBOMDetails = () => {
                   </div>
                 ))}
               </div>
-  
+
               <div className="mt-6 text-lg space-y-2">
                 <p>
                   <strong>🔍 Total Vulnerabilities:</strong>{" "}
@@ -126,9 +155,8 @@ const SBOMDetails = () => {
                 <p>
                   <strong>🔥 Highest Severity:</strong>{" "}
                   <span
-                    className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${
-                      severityColors[vulnReport.highestSeverity] || severityColors.unknown
-                    }`}
+                    className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${severityColors[vulnReport.highestSeverity] || severityColors.unknown
+                      }`}
                   >
                     {vulnReport.highestSeverity.toUpperCase()}
                   </span>
@@ -140,30 +168,62 @@ const SBOMDetails = () => {
               </div>
             </div>
           )}
-  
+
           {/* Parsed Grype Report */}
           {!parsedLoading && parsed?.vulnReport?.matches?.length > 0 && (
             <div className="mt-12">
               <h2 className="text-2xl font-semibold mb-4 text-red-700 text-center">
                 📊 Parsed Vulnerabilities (Grype)
               </h2>
-  
-              <div className="bg-white shadow-md rounded-lg p-6 text-sm border border-gray-200">
-                <p><strong>Total Matches:</strong> {parsed.vulnReport.matches.length}</p>
-                <ul className="mt-4 space-y-3">
-                  {parsed.vulnReport.matches.slice(0, 10).map((match, idx) => (
-                    <li key={idx} className="border-b pb-2">
-                      <strong>{match.vulnerability.id}</strong> ({match.vulnerability.severity})
-                      <br />
-                      Package: {match.artifact.name} {match.artifact.version}
-                      <br />
-                      Fixed In: {match.vulnerability.fixedInVersion || "N/A"}
-                    </li>
-                  ))}
-                </ul>
+
+              <input
+                type="text"
+                placeholder="Search by package or vuln ID..."
+                value={vulnSearch}
+                onChange={(e) => setVulnSearch(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded mb-4"
+              />
+
+              <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                {filteredVulns?.length > 0 ? (
+                  filteredVulns.map((match, idx) => {
+                    const vuln = match.vulnerability;
+                    const artifact = match.artifact;
+                    const related = match.relatedVulnerabilities?.[0];
+                    const fix = vuln.fix?.versions?.[0] || "N/A";
+                    const baseScore = vuln.cvss?.[0]?.metrics?.baseScore ?? "N/A";
+                    const cve = vuln.epss?.[0]?.cve ?? related?.id ?? "N/A";
+                    const referenceUrl = related?.urls?.[0] || vuln.dataSource;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-white border border-gray-200 rounded-lg shadow-md p-4"
+                      >
+                        <p><strong>📦 Package:</strong> {artifact.name} {artifact.version} ({artifact.type})</p>
+                        <p><strong>🛡 Vulnerability:</strong> {vuln.id}</p>
+                        <p><strong>⚠️ Severity:</strong> <span className="capitalize">{vuln.severity}</span></p>
+                        <p><strong>🧾 CVE:</strong> {cve}</p>
+                        <p><strong>📝 Description:</strong> {vuln.description}</p>
+                        <p><strong>📊 CVSS Score:</strong> {baseScore}</p>
+                        <p><strong>🧯 Fixed In:</strong> {fix}</p>
+                        {referenceUrl && (
+                          <p className="text-blue-600 mt-1">
+                            <a href={referenceUrl} target="_blank" rel="noopener noreferrer">
+                              🔗 Reference
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-500">No vulnerabilities match your search.</p>
+                )}
               </div>
             </div>
           )}
+
         </div>
       </div>
     </>
