@@ -43,13 +43,13 @@ async function gracefulShutdown() {
   process.exit(0);
 }
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+// process.on('SIGTERM', gracefulShutdown);
+// process.on('SIGINT', gracefulShutdown);
 
 // Start the server
 async function startServer() {
   try {
-    await initializeResources();
+    // await initializeResources();
     const server = app.listen(process.env.PORT, () => {
       console.log(`🚀 Server running at http://localhost:${process.env.PORT}`);
     });

@@ -1,0 +1,14 @@
+# Terraform state files
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+
+# Sensitive variable files (local overrides)
+*.tfvars
+*.tfvars.json
+
+# Ignore Terraform cache directory
+.terraform/
+
+# Ignore environment config if you generate one
+.env

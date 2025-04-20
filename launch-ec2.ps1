@@ -1,6 +1,6 @@
 param (
     [string]$LaunchTemplateName = "SBOM-FYP",
-    [string]$LaunchTemplateVersion = "16",
+    [string]$LaunchTemplateVersion = "22",
     [string]$KeyPath = "C:\Users\dylan\OneDrive\Documents\College\Year 4\FYP\Keys\PrimaryKeyFYP.pem",
     [switch]$DryRun
 )
