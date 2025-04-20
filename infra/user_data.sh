@@ -5,7 +5,7 @@ set -euxo pipefail
 cd /home/ec2-user
 
 curl -L -o app.zip https://github.com/DylBP/SBOM-FYP/archive/refs/heads/experimental.zip
-unzip app.zip
+unzip -o app.zip
 cd SBOM-FYP-experimental/api
 
 cat <<EOF > .env
@@ -14,7 +14,11 @@ PORT=3000
 S3_SBOM_BUCKET_NAME=${bucket_name}
 DYNAMO_SBOM_TABLE=${sbom_table_name}
 DYNAMO_PROJECTS_TABLE=${project_table_name}
+COGNITO_CLIENT_ID=${cognito_client_id}
+COGNITO_CLIENT_SECRET=${cognito_client_secret}
+COGNITO_USER_POOL_ID=${cognito_user_pool_id}
 EOF
+
 
 mkdir -p /home/ec2-user/SBOM-FYP-experimental/api/temp
 chown ec2-user:ec2-user /home/ec2-user/SBOM-FYP-experimental/api/temp

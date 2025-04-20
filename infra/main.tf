@@ -95,15 +95,45 @@ resource "aws_dynamodb_table" "sbom_table" {
   }
 }
 
-# ─── EC2 LAUNCH TEMPLATE AND INSTANCE ───────────────
+# ─── COGNITO USER POOL ──────────────────────────────
+resource "aws_cognito_user_pool" "sbom_user_pool" {
+  name = "sbom-user-pool"
 
+  auto_verified_attributes = ["email"]
+
+  email_configuration {
+    email_sending_account = "COGNITO_DEFAULT"
+  }
+
+  admin_create_user_config {
+    allow_admin_create_user_only = false
+  }
+}
+
+resource "aws_cognito_user_pool_client" "sbom_app_client" {
+  name         = "sbom-app-client"
+  user_pool_id = aws_cognito_user_pool.sbom_user_pool.id
+  generate_secret = true
+
+  explicit_auth_flows = [
+    "ALLOW_USER_PASSWORD_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH",
+    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_ADMIN_USER_PASSWORD_AUTH"
+  ]
+}
+
+# ─── EC2 LAUNCH TEMPLATE AND INSTANCE ───────────────
 data "template_file" "user_data" {
   template = file("${path.module}/user_data.sh")
 
   vars = {
-    bucket_name         = aws_s3_bucket.sbom_bucket.bucket
-    sbom_table_name     = aws_dynamodb_table.sbom_table.name
-    project_table_name  = aws_dynamodb_table.projects_table.name
+    bucket_name           = aws_s3_bucket.sbom_bucket.bucket
+    sbom_table_name       = aws_dynamodb_table.sbom_table.name
+    project_table_name    = aws_dynamodb_table.projects_table.name
+    cognito_user_pool_id  = aws_cognito_user_pool.sbom_user_pool.id
+    cognito_client_id     = aws_cognito_user_pool_client.sbom_app_client.id
+    cognito_client_secret = aws_cognito_user_pool_client.sbom_app_client.client_secret
   }
 }
 
@@ -128,14 +158,14 @@ resource "aws_instance" "sbom_instance" {
   ami           = var.ami_id
   instance_type = var.instance_type
   key_name      = var.key_name
-
-  launch_template {
-    id      = "lt-01c26f364cefbf067"
-    version = "$Latest"
-  }
-
   vpc_security_group_ids = ["sg-01a6e3d267db51aae"]
   associate_public_ip_address = true
+  iam_instance_profile = "delve-processing-server"
+
+  launch_template {
+    id      = aws_launch_template.sbom_lt.id
+    version = "$Latest"
+  }
 
   tags = {
     Name = "SBOM-FYP"

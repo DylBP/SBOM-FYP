@@ -19,3 +19,17 @@ output "sbom_table_name" {
 output "instance_public_ip" {
   value = aws_instance.sbom_instance.public_ip
 }
+
+# ─── Cognito User Pool / Client Output ───────────────────────
+output "cognito_user_pool_id" {
+  value = aws_cognito_user_pool.sbom_user_pool.id
+}
+
+output "cognito_client_id" {
+  value = aws_cognito_user_pool_client.sbom_app_client.id
+}
+
+output "cognito_client_secret" {
+  value     = aws_cognito_user_pool_client.sbom_app_client.client_secret
+  sensitive = true
+}
