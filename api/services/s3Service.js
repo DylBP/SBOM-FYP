@@ -64,8 +64,7 @@ async function downloadAndParseJSONFromS3(key, bucket) {
 }
 
 module.exports = { 
-  uploadToS3, 
-  createSBOMBucket, 
+  uploadToS3,
   deleteFileFromS3 ,
   downloadAndParseJSONFromS3
 };
