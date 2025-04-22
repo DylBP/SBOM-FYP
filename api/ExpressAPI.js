@@ -6,10 +6,6 @@ const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const {authenticateToken } = require('./middlewares/authMiddleware');
 
-const { createSBOMBucket } = require('./services/s3Service');
-const { createSBOMTable, createProjectsTable } = require('./services/dynamoService');
-const { deleteSBOMBucket, deleteTables } = require('./services/cleanupService');
-
 const cors = require('cors');
 
 const app = express();
@@ -21,35 +17,9 @@ app.use(cors({
   credentials: true
 }))
 
-// Initialize resources (S3, DynamoDB)
-async function initializeResources() {
-  try {
-    await createSBOMBucket();
-    await createSBOMTable();
-    await createProjectsTable();
-    console.log(`✔️ SBOM Bucket and Table created successfully!`);
-  } catch (error) {
-    console.error('❌ Error initializing resources:', error);
-    process.exit(1);
-  }
-}
-
-// Graceful shutdown handler
-async function gracefulShutdown() {
-  console.log('🔔 Shutting down gracefully...');
-  await deleteSBOMBucket();
-  await deleteTables();
-  console.log('✅ Cleanup complete. Server shutting down...');
-  process.exit(0);
-}
-
-// process.on('SIGTERM', gracefulShutdown);
-// process.on('SIGINT', gracefulShutdown);
-
 // Start the server
 async function startServer() {
   try {
-    // await initializeResources();
     const server = app.listen(process.env.PORT, () => {
       console.log(`🚀 Server running at http://localhost:${process.env.PORT}`);
     });
