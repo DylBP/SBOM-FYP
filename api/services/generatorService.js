@@ -5,6 +5,9 @@ const { cleanupFile, cleanupDirectory } = require('./cleanupService');
 
 async function generateFromArchive(zipFilePath) {
   const extractedDir = extractZipToTempDir(zipFilePath);
+  console.log('📁 Extracted directory:', extractedDir);
+  console.log('📄 Files inside:', fs.readdirSync(extractedDir));
+
   const sbomPath = await generateSBOM('dir', extractedDir, 'cyclonedx-json');
 
   return {
