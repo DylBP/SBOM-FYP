@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import axios from "../api/axios";
 import Navbar from "../components/Navbar";
 
@@ -9,6 +9,7 @@ const Generator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [downloadUrl, setDownloadUrl] = useState(null);
+  const fileInputRef = useRef();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +24,7 @@ const Generator = () => {
       if (imageName) formData.append("image", imageName);
 
       const res = await axios.post("/api/generator/generateSBOM", formData, {
-        responseType: "blob", // Important for file download
+        responseType: "blob",
       });
 
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -58,7 +59,20 @@ const Generator = () => {
               </label>
               <select
                 value={inputType}
-                onChange={(e) => setInputType(e.target.value)}
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  setInputType(selected);
+
+                  if (!["archive", "oci-archive"].includes(selected)) {
+                    setFile(null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                  }
+                  if (!["docker", "registry"].includes(selected)) {
+                    setImageName("");
+                  }
+                }}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600"
               >
                 <option value="archive">Archive (.zip)</option>
@@ -75,6 +89,7 @@ const Generator = () => {
                   Upload File
                 </label>
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept=".zip,.tar"
                   onChange={(e) => setFile(e.target.files[0])}
