@@ -1,4 +1,4 @@
-const path = require('path');
+const fs = require('fs');
 const { extractZipToTempDir } = require('../utils/archiveUtils');
 const { generateSBOM } = require('./syftService');
 const { cleanupFile, cleanupDirectory } = require('./cleanupService');
