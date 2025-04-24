@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axios";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 
 const Upload = () => {
   const [file, setFile] = useState(null);
@@ -42,7 +42,7 @@ const Upload = () => {
 
   return (
     <>
-      <Navbar />
+      <Sidebar />
       <div className="flex min-h-screen flex-col justify-center pt-20 px-6 py-12 bg-gray-100 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">

@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "../api/axios";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 
 const SBOMDetails = () => {
   const { id } = useParams();
@@ -42,7 +42,7 @@ const SBOMDetails = () => {
   if (loading) {
     return (
       <>
-        <Navbar />
+        <Sidebar />
         <div className="pt-20 px-6 min-h-screen flex items-center justify-center bg-gray-100">
           <p className="text-gray-600 text-center">Loading SBOM details...</p>
         </div>
@@ -53,7 +53,7 @@ const SBOMDetails = () => {
   if (!sbom) {
     return (
       <>
-        <Navbar />
+        <Sidebar />
         <div className="pt-20 px-6 min-h-screen flex items-center justify-center bg-gray-100">
           <p className="text-red-500 text-center">No SBOM found.</p>
         </div>
@@ -74,7 +74,7 @@ const SBOMDetails = () => {
 
   return (
     <>
-      <Navbar />
+      <Sidebar />
       <div className="pt-20 px-6 py-12 min-h-screen bg-gray-100">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center">📄 SBOM Metadata</h1>

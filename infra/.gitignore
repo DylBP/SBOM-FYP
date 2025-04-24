@@ -12,3 +12,5 @@ crash.log
 
 # Ignore environment config if you generate one
 .env
+
+/lightweight

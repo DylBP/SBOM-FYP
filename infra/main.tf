@@ -123,7 +123,7 @@ resource "aws_cognito_user_pool_client" "sbom_app_client" {
   ]
 }
 
-# ─── EC2 LAUNCH TEMPLATE AND INSTANCE ───────────────
+# ─── EC2 LAUNCH TEMPLATE AND USER DATA TEMPLATE ───────────────
 data "template_file" "user_data" {
   template = file("${path.module}/user_data.sh")
 
@@ -145,6 +145,15 @@ resource "aws_launch_template" "sbom_lt" {
 
   user_data = base64encode(data.template_file.user_data.rendered)
 
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.instance_sg.id]
+  }
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_profile.name
+  }
+
   tag_specifications {
     resource_type = "instance"
 
@@ -154,20 +163,172 @@ resource "aws_launch_template" "sbom_lt" {
   }
 }
 
-resource "aws_instance" "sbom_instance" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  key_name      = var.key_name
-  vpc_security_group_ids = ["sg-01a6e3d267db51aae"]
-  associate_public_ip_address = true
-  iam_instance_profile = "delve-processing-server"
+# ─── SG FOR ALB ─────────────────────────────────
+resource "aws_security_group" "alb_sg" {
+  name        = "sbom-alb-sg"
+  description = "Allow HTTP traffic to ALB"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# ─── SG FOR INSTANCES ──────────────────────────────
+resource "aws_security_group" "instance_sg" {
+  name        = "sbom-instance-sg"
+  description = "Allow traffic from ALB to EC2"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+resource "aws_lb" "api_alb" {
+  name               = "sbom-api-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = var.public_subnets
+}
+
+resource "aws_lb_target_group" "api_tg" {
+  name        = "sbom-api-tg"
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "instance"
+
+  health_check {
+    path                = "/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    matcher             = "200"
+  }
+}
+
+resource "aws_lb_listener" "api_listener" {
+  load_balancer_arn = aws_lb.api_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api_tg.arn
+  }
+}
+
+resource "aws_autoscaling_group" "api_asg" {
+  desired_capacity     = 2
+  max_size             = 3
+  min_size             = 1
+  vpc_zone_identifier  = var.public_subnets
+  target_group_arns    = [aws_lb_target_group.api_tg.arn]
 
   launch_template {
     id      = aws_launch_template.sbom_lt.id
     version = "$Latest"
   }
 
-  tags = {
-    Name = "SBOM-FYP"
+  tag {
+    key                 = "Name"
+    value               = "SBOM-API"
+    propagate_at_launch = true
   }
+
+  health_check_type         = "ELB"
+  health_check_grace_period = 60
+  force_delete               = true
+}
+
+resource "aws_iam_role" "ec2_role" {
+  name = "sbom-api-ec2-role"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "s3_access" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "dynamo_access" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_access" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonCognitoPowerUser"
+}
+
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "sbom-api-instance-profile"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  role = aws_iam_role.ec2_role.name
+}
+
+# Fetch EC2 instances tagged by the ASG
+data "aws_instances" "sbom_api" {
+  filter {
+    name   = "tag:Name"
+    values = ["SBOM-API"]
+  }
+
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
+
+  depends_on = [aws_autoscaling_group.api_asg]
 }

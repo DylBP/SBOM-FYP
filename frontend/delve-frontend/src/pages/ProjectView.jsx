@@ -1,7 +1,10 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "../api/axios";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
+import SBOMCard from "../components/projectView/SBOMCard";
+import ItemGrid from "../components/ItemGrid";
+import cache from "../lib/cache"; // ✅ Import cache
 
 const ProjectView = () => {
   const { projectId } = useParams();
@@ -12,8 +15,16 @@ const ProjectView = () => {
   const [message, setMessage] = useState("");
 
   const fetchSboms = async () => {
+    const cached = cache.getSboms(projectId);
+    if (cached) {
+      setSboms(cached);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await axios.get(`/api/projects/${projectId}/sboms`);
+      cache.setSboms(projectId, res.data); // ✅ Cache it
       setSboms(res.data);
     } catch (err) {
       console.error("Failed to fetch SBOMs for project:", err);
@@ -23,7 +34,9 @@ const ProjectView = () => {
   };
 
   useEffect(() => {
-    fetchSboms();
+    if (projectId) {
+      fetchSboms();
+    }
   }, [projectId]);
 
   const handleUpload = async (e) => {
@@ -42,13 +55,12 @@ const ProjectView = () => {
     try {
       setUploading(true);
       await axios.post(`/api/uploadSBOM`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
       setMessage("✅ Upload successful!");
       setFile(null);
-      fetchSboms(); // refresh the list
+      cache.clearSboms(projectId); // ✅ Invalidate cache
+      fetchSboms(); // ✅ Refetch
     } catch (error) {
       console.error("Upload failed", error);
       setMessage("❌ Upload failed. Please try again.");
@@ -59,7 +71,7 @@ const ProjectView = () => {
 
   return (
     <>
-      <Navbar />
+      <Sidebar />
       <div className="flex min-h-screen flex-col pt-20 px-6 py-12 bg-gray-100 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-4xl">
           <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
@@ -102,38 +114,15 @@ const ProjectView = () => {
             </form>
           </div>
 
-          {/* SBOM List */}
+          {/* SBOM Grid */}
           {loading ? (
             <p className="text-center text-gray-600">Loading SBOMs...</p>
-          ) : sboms.length === 0 ? (
-            <p className="text-center text-gray-500">
-              No SBOMs uploaded for this project yet.
-            </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {sboms.map((sbom) => (
-                <div
-                  key={sbom.id}
-                  className="bg-white p-6 rounded-lg shadow hover:shadow-md transition border border-gray-200"
-                >
-                  <h2 className="text-xl font-semibold text-indigo-700 break-words">
-                    {sbom.name || "Unnamed SBOM"}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Created:{" "}
-                    {sbom.createdAt
-                      ? new Date(sbom.createdAt).toLocaleString()
-                      : "Unknown"}
-                  </p>
-                  <Link
-                    to={`/sbom/${sbom.id}`}
-                    className="inline-block mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-500"
-                  >
-                    View Details →
-                  </Link>
-                </div>
-              ))}
-            </div>
+            <ItemGrid
+              data={sboms}
+              renderItem={(sbom) => <SBOMCard key={sbom.id} sbom={sbom} />}
+              emptyMessage="No SBOMs uploaded for this project yet."
+            />
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import axios from "../api/axios";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 
 const Generator = () => {
   const [inputType, setInputType] = useState("archive");
@@ -42,7 +42,7 @@ const Generator = () => {
 
   return (
     <>
-      <Navbar />
+      <Sidebar />
       <div className="pt-20 px-6 py-12 min-h-screen bg-gray-100">
         <div className="max-w-xl mx-auto bg-white p-8 rounded shadow-md border border-gray-200">
           <h1 className="text-2xl font-bold mb-6 text-center text-indigo-700">

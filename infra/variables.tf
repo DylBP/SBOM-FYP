@@ -28,3 +28,12 @@ variable "key_name" {
   description = "SSH key pair name for access"
   type        = string
 }
+
+variable "vpc_id" {
+  description = "VPC to launch resources into"
+}
+
+variable "public_subnets" {
+  description = "List of public subnet IDs"
+  type        = list(string)
+}
