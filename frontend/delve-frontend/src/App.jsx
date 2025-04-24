@@ -3,7 +3,7 @@ import { AuthProvider } from "./context/AuthProvider";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import Upload from "./pages/Upload";
+import Statistics from "./pages/Statistics";
 import SBOMDetails from "./pages/SBOMDetails";
 import ConfirmSignup from "./pages/ConfirmSignup";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,6 +21,7 @@ function App() {
           <Route path="/sbom/:id" element={<ProtectedRoute><SBOMDetails /></ProtectedRoute>} />
           <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectView /></ProtectedRoute>} />
           <Route path="/generate" element={<ProtectedRoute><Generator /></ProtectedRoute>} />
+          <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
           <Route path="/confirm-signup" element={<ConfirmSignup />} />
         </Routes>
       </Router>

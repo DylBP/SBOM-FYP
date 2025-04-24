@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { Menu, LogOut, LayoutDashboard, FilePlus2 } from "lucide-react";
+import { Menu, LogOut, LayoutDashboard, FilePlus2, BarChart2 } from "lucide-react";
 
 const navLinks = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/generate", label: "Generate SBOMs", icon: FilePlus2 },
+  { to: "/statistics", label: "Statistics", icon: BarChart2 },
 ];
 
 const Sidebar = () => {

@@ -4,7 +4,9 @@ import Sidebar from "../components/Sidebar";
 import ProjectCard from "../components/dashboard/ProjectCard";
 import NewProjectCard from "../components/dashboard/NewProjectCard";
 import ItemGrid from "../components/ItemGrid";
-import cache from "../lib/cache"; // ✅ import the cache
+import cache from "../lib/cache";
+import { v4 as uuidv4 } from "uuid";
+
 
 const Dashboard = () => {
   const [projects, setProjects] = useState([]);
@@ -32,7 +34,7 @@ const Dashboard = () => {
 
     try {
       const res = await axios.get("/api/projects");
-      cache.setProjects(res.data); // ✅ cache it
+      cache.setProjects(res.data);
       setProjects(res.data);
     } catch (err) {
       console.error("Failed to fetch projects:", err);
@@ -46,7 +48,7 @@ const Dashboard = () => {
     setError("");
 
     const payload = {
-      projectId: newProject.projectId.trim(),
+      projectId: uuidv4(),
       name: newProject.name.trim(),
       description: newProject.description.trim(),
       tags: newProject.tags.split(",").map((t) => t.trim()).filter(Boolean),
@@ -57,8 +59,8 @@ const Dashboard = () => {
       setNewProject({ projectId: "", name: "", description: "", tags: "" });
       setCreating(false);
 
-      cache.clearProjects(); // ✅ clear the cache to force fresh fetch
-      await fetchProjects(); // ✅ refetch updated project list
+      cache.clearProjects();
+      await fetchProjects();
     } catch (err) {
       console.error("Failed to create project:", err);
       setError(err.response?.data?.message || "Failed to create project.");
@@ -89,7 +91,10 @@ const Dashboard = () => {
                     error={error}
                   />
                 ) : (
-                  <ProjectCard key={item.projectId} project={item} />
+                  <ProjectCard 
+                    key={item.projectId}
+                    project={item}
+                    onProjectUpdate={setProjects} />
                 )
               }
               emptyMessage="You have no projects yet."

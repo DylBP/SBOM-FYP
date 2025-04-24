@@ -59,8 +59,8 @@ const ProjectView = () => {
       });
       setMessage("✅ Upload successful!");
       setFile(null);
-      cache.clearSboms(projectId); // ✅ Invalidate cache
-      fetchSboms(); // ✅ Refetch
+      cache.clearSboms(projectId);
+      fetchSboms();
     } catch (error) {
       console.error("Upload failed", error);
       setMessage("❌ Upload failed. Please try again.");
