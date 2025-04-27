@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import axios from "../api/axios";
-import Sidebar from "../components/Sidebar";
 import ProjectCard from "../components/dashboard/ProjectCard";
 import NewProjectCard from "../components/dashboard/NewProjectCard";
 import ItemGrid from "../components/ItemGrid";
@@ -56,20 +55,24 @@ const Dashboard = () => {
 
     try {
       await axios.post("/api/projects", payload);
+
+      const currentProjects = cache.getProjects() || [];
+      const updatedProjects = [...currentProjects, payload];
+
+      cache.setProjects(updatedProjects);
+      setProjects(updatedProjects);
+
       setNewProject({ projectId: "", name: "", description: "", tags: "" });
       setCreating(false);
-
-      cache.clearProjects();
-      await fetchProjects();
     } catch (err) {
       console.error("Failed to create project:", err);
       setError(err.response?.data?.message || "Failed to create project.");
     }
   };
 
+
   return (
     <>
-      <Sidebar />
       <div className="flex min-h-screen flex-col pt-20 px-6 py-12 bg-gray-100 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-5xl space-y-8">
           <h1 className="text-3xl font-bold text-gray-800 text-center">Your Projects</h1>
@@ -91,7 +94,7 @@ const Dashboard = () => {
                     error={error}
                   />
                 ) : (
-                  <ProjectCard 
+                  <ProjectCard
                     key={item.projectId}
                     project={item}
                     onProjectUpdate={setProjects} />

@@ -18,7 +18,7 @@ async function processSBOM(req, res) {
   // ──────────────────────────────────────
   // Optional project linkage
   // ──────────────────────────────────────
-  const { projectId } = req.body;               // may be undefined
+  const { projectId } = req.body;
   if (projectId) {
     const project = await getProject(req.user.sub, projectId);
     if (!project) return res.status(404).json({ error: 'Project not found' });

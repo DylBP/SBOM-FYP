@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import axios from "../api/axios";
-import Sidebar from "../components/Sidebar";
 import FileUploadInput from "../components/generator/FileUploadInput";
 
 const Generator = () => {
@@ -53,7 +52,6 @@ const Generator = () => {
 
   return (
     <>
-      <Sidebar />
       <main className="pt-20 px-6 py-12 min-h-screen bg-gray-100">
         <section className="max-w-xl mx-auto bg-white p-8 rounded shadow-md border border-gray-200">
           <h1 className="text-3xl font-bold mb-6 text-center text-indigo-700">
@@ -121,11 +119,10 @@ const Generator = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full text-white font-semibold py-2 px-4 rounded-md transition ${
-                loading
+              className={`w-full text-white font-semibold py-2 px-4 rounded-md transition ${loading
                   ? "bg-indigo-400 cursor-not-allowed"
                   : "bg-indigo-600 hover:bg-indigo-500"
-              }`}
+                }`}
             >
               {loading ? "Generating..." : "Generate SBOM"}
             </button>

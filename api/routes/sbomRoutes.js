@@ -1,7 +1,6 @@
 const express = require('express');
 const upload = require('../middlewares/multerMiddleware');
 const { processSBOM, getSBOMById, getMySBOMs, deleteMySBOM, getParsedSbomWithVulns } = require('../controllers/sbomController');
-const multer = require('multer');
 const { handleSBOMGeneration } = require('../controllers/generatorController');
 
 const router = express.Router();

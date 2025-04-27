@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import axios from "../api/axios";
-import cache from "../lib/cache"; // ✅ Cache import
+import cache from "../lib/cache";
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -14,29 +14,39 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      // Authenticate the user
+      cache.clearAll();
+
       const res = await axios.post('/auth/login', { username, password });
       login(res.data.tokens.AccessToken);
 
-      // ✅ Fetch and cache all projects
       const projectRes = await axios.get("/api/projects");
       const projects = projectRes.data;
       cache.setProjects(projects);
 
-      // ✅ Fetch and cache latest SBOMs for each project
       await Promise.all(
         projects.map(async (project) => {
           const id = project.projectId || project.id;
           try {
             const sbomRes = await axios.get(`/api/projects/${id}/sboms`);
             cache.setSboms(id, sbomRes.data);
+
+            await Promise.all(
+              sbomRes.data.map(async (sbom) => {
+                try {
+                  const parsedRes = await axios.get(`/api/${sbom.id}/parsed`);
+                  cache.setParsed(sbom.id, parsedRes.data);
+                } catch (err) {
+                  console.warn(`Failed to preload parsed SBOM ${sbom.id}`, err);
+                }
+              })
+            );
+
           } catch (err) {
             console.warn(`Failed to preload SBOMs for project ${id}`, err);
           }
         })
       );
 
-      // ✅ Navigate after data is ready
       navigate('/');
     } catch (err) {
       console.error(err);
@@ -57,7 +67,7 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Username input */}
+          {/* Username */}
           <div>
             <label htmlFor="username" className="block text-sm font-medium">
               Username
@@ -73,7 +83,7 @@ const Login = () => {
             />
           </div>
 
-          {/* Password input */}
+          {/* Password */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium">
               Password
@@ -89,7 +99,7 @@ const Login = () => {
             />
           </div>
 
-          {/* Submit button */}
+          {/* Submit */}
           <div>
             <button
               type="submit"

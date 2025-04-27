@@ -12,7 +12,7 @@ async function scanSBOM(filePath) {
     console.log(`📦 Running Grype on SBOM file: ${filePath}`);
     console.log(`🧭 Using Grype binary: ${grypePath}`);
 
-    execFile(grypePath, [`sbom:${filePath}`, '-o', 'json'], { timeout: 30000 }, (error, stdout, stderr) => {
+    execFile(grypePath, [`sbom:${filePath}`, '-o', 'json'], { timeout: 100000 }, (error, stdout, stderr) => {
       if (error) {
         console.error(`❌ Grype exited with error (code ${error.code}): ${error.message}`);
         if (stderr) console.error(`❌ STDERR: ${stderr}`);

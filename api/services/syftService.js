@@ -15,7 +15,7 @@ async function generateSBOM(inputType, inputPath, outputFormat = 'cyclonedx-json
 
   return new Promise((resolve, reject) => {
     console.log('📦 Running Syft command:', syftArgs.join(' '));
-    execFile(syftPath, syftArgs, { timeout: 30000, env: { ...process.env, SYFT_LOG: 'error' } }, (error, stdout, stderr) => {
+    execFile(syftPath, syftArgs, { timeout: 100000, env: { ...process.env, SYFT_LOG: 'error' } }, (error, stdout, stderr) => {
       if (error) {
         console.error(`❌ Syft Error: ${stderr}`);
         console.error(`❌ STDOUT: ${stdout}`);
