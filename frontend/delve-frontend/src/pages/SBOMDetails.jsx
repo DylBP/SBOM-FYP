@@ -94,10 +94,11 @@ const SBOMDetails = () => {
       <div className="pt-20 px-6 py-12 min-h-screen bg-gray-100">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center">
-            📄 SBOM for Project: {projectName || sbom.projectId || "Unknown Project"}
+            <p>📁 File Name: {sbom.id.split('_')[1]}</p>
           </h1>
 
           <div className="bg-white shadow-md rounded-lg p-6 space-y-4 border border-gray-200">
+            <p><strong>📽️ Project Name:</strong> {projectName}</p>
             <p><strong>📁 File Name:</strong> {sbom.id}</p>
             <p><strong>📦 Package Path:</strong> {name}</p>
             <p><strong>📅 Created At:</strong> {new Date(createdAt).toLocaleString()}</p>
@@ -241,7 +242,6 @@ const SBOMDetails = () => {
               </div>
             </div>
           )}
-
         </div>
       </div>
     </>
