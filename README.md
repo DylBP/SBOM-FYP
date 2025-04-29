@@ -203,7 +203,7 @@ the ALB DNS name from earlier is the base URL.
 
 ### 5. Accessing the Application
 
-Once the backend is deployed and the frontend is running, you can access the Delve application in your browser:
+Once the backend is deployed and the frontend is running, you can access the Delve application in your browser at the localhost URL.
 
 ---
 

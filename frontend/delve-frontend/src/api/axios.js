@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: 'http://34.254.180.214:3000',
+  baseURL: 'http://sbom-api-alb-1211571950.eu-west-1.elb.amazonaws.com',
 });
 
 instance.interceptors.request.use((config) => {
