@@ -1,5 +1,4 @@
 const { PutCommand, QueryCommand, GetCommand, DeleteCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
-const { CreateTableCommand } = require('@aws-sdk/client-dynamodb');
 const { dbClient, docClient } = require('../config/awsConfig');
 
 const SBOM_TABLE = process.env.DYNAMO_SBOM_TABLE;
@@ -16,7 +15,7 @@ async function putProject(userId, projectId, attrs) {
       projectId,
       createdAt: now,
       updatedAt: now,
-      ...attrs,                 // name, description, tags…
+      ...attrs,
     },
     ConditionExpression: 'attribute_not_exists(projectId)',
   };
@@ -84,7 +83,8 @@ async function getProjectSBOMs(projectId) {
     TableName: SBOM_TABLE,
     IndexName: 'projectId-index',
     KeyConditionExpression: "projectId = :p",
-    ExpressionAttributeValues: { ':p': projectId}
+    ExpressionAttributeValues: { ':p': projectId},
+    ScanIndexForward: false,
   };
 
   const { Items } = await docClient.send(new QueryCommand(params));

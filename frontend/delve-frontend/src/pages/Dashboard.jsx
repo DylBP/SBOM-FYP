@@ -51,6 +51,7 @@ const Dashboard = () => {
       name: newProject.name.trim(),
       description: newProject.description.trim(),
       tags: newProject.tags.split(",").map((t) => t.trim()).filter(Boolean),
+      createdAt: new Date().toISOString(),
     };
 
     try {

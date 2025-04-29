@@ -1,3 +1,7 @@
+# Script has been made redundant by the introduction of Terraform
+# Don't run this script
+# Keeping it for reference only
+
 param (
     [string]$LaunchTemplateName = "SBOM-FYP",
     [string]$LaunchTemplateVersion = "22",
