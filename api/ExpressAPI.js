@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: 'http://http://sbom-delve-frontend.s3-website-eu-west-1.amazonaws.com',
+  origin: 'http://sbom-delve-frontend.s3-website-eu-west-1.amazonaws.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }))
