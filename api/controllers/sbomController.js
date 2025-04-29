@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { extractMetadata, extractVulnMetadata, normalizeSeverityCounts } = require('../utils/metadataUtils');
 const { uploadToS3, deleteFileFromS3, downloadAndParseJSONFromS3 } = require('../services/s3Service');
-const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord, getProject, getProjectSBOMs } = require('../services/dynamoService');
+const { storeMetadata, getUserSBOMs, getSbomRecord, deleteSbomRecord, getProject } = require('../services/dynamoService');
 const { generateSBOM } = require('../services/syftService');
 const { scanSBOM } = require('../services/grypeService');
 const { cleanupFile, cleanupDirectory } = require('../services/cleanupService');
@@ -18,7 +18,7 @@ async function processSBOM(req, res) {
   // ──────────────────────────────────────
   // Optional project linkage
   // ──────────────────────────────────────
-  const { projectId } = req.body;               // may be undefined
+  const { projectId } = req.body;
   if (projectId) {
     const project = await getProject(req.user.sub, projectId);
     if (!project) return res.status(404).json({ error: 'Project not found' });

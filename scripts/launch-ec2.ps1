@@ -1,6 +1,10 @@
+# Script has been made redundant by the introduction of Terraform
+# Don't run this script
+# Keeping it for reference only
+
 param (
     [string]$LaunchTemplateName = "SBOM-FYP",
-    [string]$LaunchTemplateVersion = "16",
+    [string]$LaunchTemplateVersion = "22",
     [string]$KeyPath = "C:\Users\dylan\OneDrive\Documents\College\Year 4\FYP\Keys\PrimaryKeyFYP.pem",
     [switch]$DryRun
 )

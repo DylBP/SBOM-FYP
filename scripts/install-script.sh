@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This whole script has been made redundant
+# Don't run this script
+# Keeping it for potential reference
+
 # Install Syft and Grype
 mkdir -p /home/ec2-user/.local/bin
 

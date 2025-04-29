@@ -1,38 +1,10 @@
 const { PutCommand, QueryCommand, GetCommand, DeleteCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
-const { CreateTableCommand, ProvisionedThroughputExceededException, BillingMode } = require('@aws-sdk/client-dynamodb');
 const { dbClient, docClient } = require('../config/awsConfig');
 
 const SBOM_TABLE = process.env.DYNAMO_SBOM_TABLE;
 const PROJECTS_TABLE = process.env.DYNAMO_PROJECTS_TABLE;
 
 // Projects Structure ------------------------------------------------------
-
-/**
- * Creates the Projects Table
- */
-async function createProjectsTable() {
-  const params = {
-    TableName: PROJECTS_TABLE,
-    AttributeDefinitions: [
-      { AttributeName: 'userId',    AttributeType: 'S' },
-      { AttributeName: 'projectId', AttributeType: 'S' },
-    ],
-    KeySchema: [
-      { AttributeName: 'userId',    KeyType: 'HASH' },
-      { AttributeName: 'projectId', KeyType: 'RANGE' },
-    ],
-    BillingMode: 'PAY_PER_REQUEST',
-    GlobalSecondaryIndexes: [{
-      IndexName: 'projectId-userId-index',
-      KeySchema: [
-        { AttributeName: 'projectId', KeyType: 'HASH' },
-        { AttributeName: 'userId',    KeyType: 'RANGE' },
-      ],
-      Projection: { ProjectionType: 'ALL' },
-    }],
-  };
-  await dbClient.send(new CreateTableCommand(params));
-}
 
 async function putProject(userId, projectId, attrs) {
   const now = new Date().toISOString();
@@ -43,7 +15,7 @@ async function putProject(userId, projectId, attrs) {
       projectId,
       createdAt: now,
       updatedAt: now,
-      ...attrs,                 // name, description, tags…
+      ...attrs,
     },
     ConditionExpression: 'attribute_not_exists(projectId)',
   };
@@ -111,7 +83,8 @@ async function getProjectSBOMs(projectId) {
     TableName: SBOM_TABLE,
     IndexName: 'projectId-index',
     KeyConditionExpression: "projectId = :p",
-    ExpressionAttributeValues: { ':p': projectId}
+    ExpressionAttributeValues: { ':p': projectId},
+    ScanIndexForward: false,
   };
 
   const { Items } = await docClient.send(new QueryCommand(params));
@@ -119,54 +92,6 @@ async function getProjectSBOMs(projectId) {
 }
 
 // SBOM Structure ------------------------------------------------------
-
-/**
- * Creates the SBOM table
- */
-async function createSBOMTable() {
-  const params = {
-    TableName: SBOM_TABLE,
-    AttributeDefinitions: [
-      { AttributeName: 'id', AttributeType: 'S' },
-      { AttributeName: 'userId', AttributeType: 'S' },
-      { AttributeName: 'projectId', AttributeType: 'S' },
-      { AttributeName: 'createdAt', AttributeType: 'S' },
-    ],
-    KeySchema: [
-      { AttributeName: 'id', KeyType: 'HASH' },
-    ],
-    BillingMode: 'PAY_PER_REQUEST',  // <- add this
-    GlobalSecondaryIndexes: [
-      {
-        IndexName: 'UserIndex',
-        KeySchema: [
-          { AttributeName: 'userId', KeyType: 'HASH' },
-        ],
-        Projection: { ProjectionType: 'ALL' },
-      },
-      {
-        IndexName: 'projectId-index',
-        KeySchema: [
-          { AttributeName: 'projectId', KeyType: 'HASH' },
-          { AttributeName: 'createdAt', KeyType: 'RANGE' },
-        ],
-        Projection: { ProjectionType: 'ALL' },
-      }
-    ],
-  };
-
-  try {
-    const data = await dbClient.send(new CreateTableCommand(params));
-    console.log('✔️ Table Created Successfully:', data.TableDescription.TableName);
-  } catch (err) {
-    if (err.name === 'ResourceInUseException') {
-      console.log('⚠️ Table already exists.');
-    } else {
-      console.error('❌ Error creating table:', err);
-    }
-  }
-}
-
 /**
  * Stores SBOM and vulnerability report metadata in DynamoDB.
  */
@@ -274,11 +199,9 @@ async function deleteSbomRecord(sbomId, userId) {
 
 module.exports = { 
   storeMetadata,
-  createSBOMTable,
   getUserSBOMs,
   getSbomRecord,
   deleteSbomRecord,
-  createProjectsTable,
   putProject,
   getProject,
   listProjects,

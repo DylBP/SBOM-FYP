@@ -1,37 +1,5 @@
-const { HeadBucketCommand, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { s3 } = require('../config/awsConfig');
-
-/**
- * Function to create the S3 bucket used to store SBOMs and vulnerability reports
- */
-async function createSBOMBucket() {
-  const bucketName = process.env.S3_SBOM_BUCKET_NAME;
-
-  try {
-    // Check if bucket exists
-    await s3.send(new HeadBucketCommand({ Bucket: bucketName }));
-    console.log(`⚠️ Bucket "${bucketName}" already exists.`);
-  } catch (err) {
-    if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
-      // Bucket does not exist, create it
-      const bucketParams = {
-        Bucket: bucketName,
-        CreateBucketConfiguration: {
-          LocationConstraint: process.env.AWS_REGION,
-        },
-      };
-
-      try {
-        await s3.send(new CreateBucketCommand(bucketParams));
-        console.log(`✔️ Bucket "${bucketName}" created successfully.`);
-      } catch (createErr) {
-        console.error(`❌ Error creating bucket:`, createErr);
-      }
-    } else {
-      console.error(`❌ Error checking bucket existence:`, err);
-    }
-  }
-}
 
 /**
  * Uploads a file to S3.
@@ -96,8 +64,7 @@ async function downloadAndParseJSONFromS3(key, bucket) {
 }
 
 module.exports = { 
-  uploadToS3, 
-  createSBOMBucket, 
+  uploadToS3,
   deleteFileFromS3 ,
   downloadAndParseJSONFromS3
 };

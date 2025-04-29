@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "../api/axios";
-import Navbar from "../components/Navbar";
+import cache from "../lib/cache";
 
 const SBOMDetails = () => {
   const { id } = useParams();
@@ -9,17 +9,40 @@ const SBOMDetails = () => {
   const [loading, setLoading] = useState(true);
   const [parsed, setParsed] = useState(null);
   const [parsedLoading, setParsedLoading] = useState(true);
+  const [projectName, setProjectName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [vulnSearch, setVulnSearch] = useState("");
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const metaRes = await axios.get(`/api/my-sboms/${id}`);
-        setSbom(metaRes.data);
+        const allProjects = cache.getProjects();
+        let foundSbom = null;
 
-        const parsedRes = await axios.get(`/api/${id}/parsed`);
-        setParsed(parsedRes.data);
+        const allSboms = cache.getAllSboms();
+        if (Array.isArray(allSboms) && allSboms.length > 0) {
+          foundSbom = allSboms.find(s => s.id === id);
+        }
+
+        if (foundSbom) {
+          setSbom(foundSbom);
+          const project = allProjects?.find(p => p.projectId === foundSbom.projectId);
+          if (project) setProjectName(project.name);
+        } else {
+          const metaRes = await axios.get(`/api/my-sboms/${id}`);
+          setSbom(metaRes.data);
+          const project = allProjects?.find(p => p.projectId === metaRes.data.projectId);
+          if (project) setProjectName(project.name);
+        }
+
+        const cachedParsed = cache.getParsed(id);
+        if (cachedParsed) {
+          setParsed(cachedParsed);
+        } else {
+          const parsedRes = await axios.get(`/api/${id}/parsed`);
+          cache.setParsed(id, parsedRes.data);
+          setParsed(parsedRes.data);
+        }
       } catch (err) {
         console.error("Error fetching SBOM or parsed content:", err);
       } finally {
@@ -41,23 +64,17 @@ const SBOMDetails = () => {
 
   if (loading) {
     return (
-      <>
-        <Navbar />
-        <div className="pt-20 px-6 min-h-screen flex items-center justify-center bg-gray-100">
-          <p className="text-gray-600 text-center">Loading SBOM details...</p>
-        </div>
-      </>
+      <div className="pt-20 px-6 min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-gray-600 text-center">Loading SBOM details...</p>
+      </div>
     );
   }
 
   if (!sbom) {
     return (
-      <>
-        <Navbar />
-        <div className="pt-20 px-6 min-h-screen flex items-center justify-center bg-gray-100">
-          <p className="text-red-500 text-center">No SBOM found.</p>
-        </div>
-      </>
+      <div className="pt-20 px-6 min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-red-500 text-center">No SBOM found.</p>
+      </div>
     );
   }
 
@@ -74,12 +91,14 @@ const SBOMDetails = () => {
 
   return (
     <>
-      <Navbar />
       <div className="pt-20 px-6 py-12 min-h-screen bg-gray-100">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center">📄 SBOM Metadata</h1>
+          <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center">
+            <p>📁 File Name: {sbom.id.split('_')[1]}</p>
+          </h1>
 
           <div className="bg-white shadow-md rounded-lg p-6 space-y-4 border border-gray-200">
+            <p><strong>📽️ Project Name:</strong> {projectName}</p>
             <p><strong>📁 File Name:</strong> {sbom.id}</p>
             <p><strong>📦 Package Path:</strong> {name}</p>
             <p><strong>📅 Created At:</strong> {new Date(createdAt).toLocaleString()}</p>
@@ -223,7 +242,6 @@ const SBOMDetails = () => {
               </div>
             </div>
           )}
-
         </div>
       </div>
     </>

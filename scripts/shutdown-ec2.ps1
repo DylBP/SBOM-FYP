@@ -1,6 +1,10 @@
+# Script has been made redundant by the introduction of Terraform
+# Don't run this script
+# Keeping it for reference only
+
 param (
     [string]$LaunchTemplateId = "lt-01c26f364cefbf067",
-    [string]$LaunchTemplateVersion = "16",
+    [string]$LaunchTemplateVersion = "21",
     [switch]$DryRun
 )
 

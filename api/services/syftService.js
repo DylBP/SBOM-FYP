@@ -7,16 +7,20 @@ const crypto = require('crypto');
  * Generates an SBOM file using Syft and returns the output file path.
  */
 async function generateSBOM(inputType, inputPath, outputFormat = 'cyclonedx-json') {
+  const syftPath = '/home/ec2-user/.local/bin/syft';
   const outputFileName = `sbom_${Date.now()}_${crypto.randomUUID()}.json`;
   const outputFilePath = path.join(__dirname, '../temp', outputFileName);
 
   const syftArgs = buildSyftArgs(inputType, inputPath, outputFormat, outputFilePath);
 
   return new Promise((resolve, reject) => {
-    execFile('syft', syftArgs, { timeout: 30000, env: { ...process.env, SYFT_LOG: 'error' } }, (error, stdout, stderr) => {
+    console.log('📦 Running Syft command:', syftArgs.join(' '));
+    execFile(syftPath, syftArgs, { timeout: 100000, env: { ...process.env, SYFT_LOG: 'error' } }, (error, stdout, stderr) => {
       if (error) {
         console.error(`❌ Syft Error: ${stderr}`);
-        return reject(new Error(`Failed to generate SBOM: ${stderr}`));
+        console.error(`❌ STDOUT: ${stdout}`);
+        console.error(`❌ Error details: ${error.message}`);
+        return reject(new Error(`Failed to generate SBOM: ${stderr || error.message}`));
       }
 
       if (!fs.existsSync(outputFilePath)) {

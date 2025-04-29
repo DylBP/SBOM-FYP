@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: 'http://52.210.127.106:3000/',
+  baseURL: 'http://18.203.234.44:3000',
 });
 
 instance.interceptors.request.use((config) => {
@@ -11,5 +11,18 @@ instance.interceptors.request.use((config) => {
   }
   return config;
 });
+
+instance.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+      alert("Session expired. Please log in again.");
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default instance;

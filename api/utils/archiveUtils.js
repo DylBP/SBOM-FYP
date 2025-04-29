@@ -1,6 +1,5 @@
 const AdmZip = require('adm-zip');
 const path = require('path');
-const fs = require('fs');
 
 /**
  * Extracts a ZIP file to a given directory.
