@@ -35,12 +35,12 @@ const SBOMDetails = () => {
           if (project) setProjectName(project.name);
         }
 
-        const cachedParsed = cache.getParsed(id);
+        const cachedParsed = await cache.getParsed(id);
         if (cachedParsed) {
           setParsed(cachedParsed);
         } else {
           const parsedRes = await axios.get(`/api/${id}/parsed`);
-          cache.setParsed(id, parsedRes.data);
+          await cache.setParsed(id, parsedRes.data);
           setParsed(parsedRes.data);
         }
       } catch (err) {

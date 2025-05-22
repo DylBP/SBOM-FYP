@@ -1,7 +1,9 @@
+import { get, set, del } from 'idb-keyval';
+
 const STORAGE_KEYS = {
     PROJECTS: "sbom_projects",
     SBOMS: "sbom_sbomsByProject",
-    PARSED_SBOMS: "sbom_parsed",
+    PARSED_SBOMS: "sbom_parsed", 
 };
 
 const cache = {
@@ -53,7 +55,7 @@ const cache = {
             delete allSboms[projectId];
             localStorage.setItem(STORAGE_KEYS.SBOMS, JSON.stringify(allSboms));
         } catch (err) {
-            console.warn("Failed to access localStorage:", err);
+            console.warn("Failed to clear SBOM:", err);
         }
     },
 
@@ -73,37 +75,31 @@ const cache = {
         localStorage.removeItem(STORAGE_KEYS.SBOMS);
     },
 
-    getParsed(sbomId) {
+    async getParsed(sbomId) {
         try {
-          const data = localStorage.getItem(STORAGE_KEYS.PARSED_SBOMS);
-          if (!data) return null;
-          const parsedSboms = JSON.parse(data);
-          return parsedSboms[sbomId] || null;
-        } catch {
-          return null;
-        }
-      },
-    
-      setParsed(sbomId, parsedData) {
-        try {
-          const allParsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.PARSED_SBOMS)) || {};
-          allParsed[sbomId] = parsedData;
-          localStorage.setItem(STORAGE_KEYS.PARSED_SBOMS, JSON.stringify(allParsed));
+            const parsed = await get(`${STORAGE_KEYS.PARSED_SBOMS}_${sbomId}`);
+            return parsed || null;
         } catch (err) {
-          console.warn("Failed to access localStorage for parsed SBOMs:", err);
+            console.warn("Failed to get parsed SBOM from IndexedDB:", err);
+            return null;
         }
-      },
-    
-      clearParsed(sbomId) {
-        try {
-          const allParsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.PARSED_SBOMS)) || {};
-          delete allParsed[sbomId];
-          localStorage.setItem(STORAGE_KEYS.PARSED_SBOMS, JSON.stringify(allParsed));
-        } catch (err) {
-          console.warn("Failed to clear parsed SBOM:", err);
-        }
-      }
-};
+    },
 
+    async setParsed(sbomId, parsedData) {
+        try {
+            await set(`${STORAGE_KEYS.PARSED_SBOMS}_${sbomId}`, parsedData);
+        } catch (err) {
+            console.warn("Failed to set parsed SBOM in IndexedDB:", err);
+        }
+    },
+
+    async clearParsed(sbomId) {
+        try {
+            await del(`${STORAGE_KEYS.PARSED_SBOMS}_${sbomId}`);
+        } catch (err) {
+            console.warn("Failed to clear parsed SBOM in IndexedDB:", err);
+        }
+    }
+};
 
 export default cache;

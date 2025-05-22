@@ -49,45 +49,46 @@ const ProjectView = () => {
   const handleUpload = async (e) => {
     e.preventDefault();
     setMessage("");
-
+  
     if (!file) {
       setMessage("⚠️ Please select a file.");
       return;
     }
-
+  
     const formData = new FormData();
     formData.append("file", file);
     formData.append("projectId", projectId);
-
+  
     try {
       setUploading(true);
       await axios.post(`/api/uploadSBOM`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
+  
       setMessage("✅ Upload successful!");
       setFile(null);
-
+  
       const existingSboms = cache.getSboms(projectId) || [];
-      existingSboms.forEach(sbom => {
-        cache.clearParsed(sbom.id);
-      });
+      await Promise.all(
+        existingSboms.map(sbom => cache.clearParsed(sbom.id))
+      );
+      
       cache.clearSboms(projectId);
-
+  
       await fetchSboms();
-
+  
       const latestSboms = cache.getSboms(projectId) || [];
       await Promise.all(
         latestSboms.map(async (sbom) => {
           try {
             const parsed = await axios.get(`/api/${sbom.id}/parsed`);
-            cache.setParsed(sbom.id, parsed.data);
+            await cache.setParsed(sbom.id, parsed.data);
           } catch (err) {
             console.warn(`Failed to fetch parsed for ${sbom.id}`, err);
           }
         })
       );
-
+  
     } catch (error) {
       console.error("Upload failed", error);
       setMessage("❌ Upload failed. Please try again.");

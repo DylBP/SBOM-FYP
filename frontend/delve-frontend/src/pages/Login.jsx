@@ -34,7 +34,7 @@ const Login = () => {
               sbomRes.data.map(async (sbom) => {
                 try {
                   const parsedRes = await axios.get(`/api/${sbom.id}/parsed`);
-                  cache.setParsed(sbom.id, parsedRes.data);
+                  await cache.setParsed(sbom.id, parsedRes.data);
                 } catch (err) {
                   console.warn(`Failed to preload parsed SBOM ${sbom.id}`, err);
                 }
